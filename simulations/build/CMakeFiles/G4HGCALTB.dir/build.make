@@ -53,10 +53,10 @@ RM = /cvmfs/sft.cern.ch/lcg/releases/CMake/3.26.2-0664a/x86_64-el9-gcc12-opt/bin
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /vols/cms/mm1221/geant4sim
+CMAKE_SOURCE_DIR = /vols/cms/mm1221/geant4sim/simulations
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /vols/cms/mm1221/geant4sim/build
+CMAKE_BINARY_DIR = /vols/cms/mm1221/geant4sim/simulations/build
 
 # Utility rule file for G4HGCALTB.
 
@@ -81,6 +81,6 @@ CMakeFiles/G4HGCALTB.dir/clean:
 .PHONY : CMakeFiles/G4HGCALTB.dir/clean
 
 CMakeFiles/G4HGCALTB.dir/depend:
-	cd /vols/cms/mm1221/geant4sim/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /vols/cms/mm1221/geant4sim /vols/cms/mm1221/geant4sim /vols/cms/mm1221/geant4sim/build /vols/cms/mm1221/geant4sim/build /vols/cms/mm1221/geant4sim/build/CMakeFiles/G4HGCALTB.dir/DependInfo.cmake --color=$(COLOR)
+	cd /vols/cms/mm1221/geant4sim/simulations/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /vols/cms/mm1221/geant4sim/simulations /vols/cms/mm1221/geant4sim/simulations /vols/cms/mm1221/geant4sim/simulations/build /vols/cms/mm1221/geant4sim/simulations/build /vols/cms/mm1221/geant4sim/simulations/build/CMakeFiles/G4HGCALTB.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/G4HGCALTB.dir/depend
 

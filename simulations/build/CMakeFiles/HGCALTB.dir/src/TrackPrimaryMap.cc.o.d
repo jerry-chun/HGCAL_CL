@@ -1,7 +1,7 @@
 CMakeFiles/HGCALTB.dir/src/TrackPrimaryMap.cc.o: \
- /vols/cms/mm1221/geant4sim/src/TrackPrimaryMap.cc \
+ /vols/cms/mm1221/geant4sim/simulations/src/TrackPrimaryMap.cc \
  /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/TrackPrimaryMap.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/TrackPrimaryMap.hh \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/map \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/bits/stl_tree.h \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/bits/stl_algobase.h \

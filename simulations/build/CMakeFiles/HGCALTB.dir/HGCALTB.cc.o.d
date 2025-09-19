@@ -1,6 +1,7 @@
 CMakeFiles/HGCALTB.dir/HGCALTB.cc.o: \
- /vols/cms/mm1221/geant4sim/HGCALTB.cc /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBActInitialization.hh \
+ /vols/cms/mm1221/geant4sim/simulations/HGCALTB.cc \
+ /usr/include/stdc-predef.h \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBActInitialization.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4String.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4Types.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4GlobalConfig.hh \
@@ -194,7 +195,7 @@ CMakeFiles/HGCALTB.dir/HGCALTB.cc.o: \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/iostream \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4String.icc \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VUserActionInitialization.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBDetConstruction.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBDetConstruction.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VUserDetectorConstruction.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/globals.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ios.hh \

@@ -49,7 +49,7 @@ constexpr G4double CEENoiseSigma = 0.12;  // MIP
 //
 
 // CHE longitudinal layers
-constexpr G4int CHELayers = 12;
+constexpr G4int CHELayers = 21;
 
 // CHE longitudinal layers with 7 silicon wafers
 constexpr G4int CHESevenWaferLayers = 9;

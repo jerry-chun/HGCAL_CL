@@ -1,7 +1,7 @@
 CMakeFiles/HGCALTB.dir/src/HGCALTBCEEHit.cc.o: \
- /vols/cms/mm1221/geant4sim/src/HGCALTBCEEHit.cc \
+ /vols/cms/mm1221/geant4sim/simulations/src/HGCALTBCEEHit.cc \
  /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEEHit.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VHit.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/globals.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ios.hh \

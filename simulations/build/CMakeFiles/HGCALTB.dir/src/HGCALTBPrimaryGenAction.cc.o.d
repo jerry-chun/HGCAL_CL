@@ -1,7 +1,7 @@
 CMakeFiles/HGCALTB.dir/src/HGCALTBPrimaryGenAction.cc.o: \
- /vols/cms/mm1221/geant4sim/src/HGCALTBPrimaryGenAction.cc \
+ /vols/cms/mm1221/geant4sim/simulations/src/HGCALTBPrimaryGenAction.cc \
  /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBPrimaryGenAction.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBPrimaryGenAction.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4Types.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4GlobalConfig.hh \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/complex \

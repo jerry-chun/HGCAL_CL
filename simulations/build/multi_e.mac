@@ -5,7 +5,7 @@
 
 /HGCAL/gun/particleTypes "e-"
 /HGCAL/gun/numParticlesMin 1
-/HGCAL/gun/numParticlesMax 5
+/HGCAL/gun/numParticlesMax 3
 /HGCAL/gun/energyMin 20 GeV
 /HGCAL/gun/energyMax 200 GeV
 /HGCAL/gun/thetaMin 0 deg

@@ -1,7 +1,7 @@
 CMakeFiles/HGCALTB.dir/src/HGCALTBCHESD.cc.o: \
- /vols/cms/mm1221/geant4sim/src/HGCALTBCHESD.cc \
+ /vols/cms/mm1221/geant4sim/simulations/src/HGCALTBCHESD.cc \
  /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCHESD.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCHESD.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VSensitiveDetector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4CollectionNameVector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/globals.hh \
@@ -396,8 +396,8 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBCHESD.cc.o: \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VReadOutGeometry.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SensitiveVolumeList.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VSDFilter.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCHEHit.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBConstants.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCHEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBConstants.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SystemOfUnits.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4Types.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4THitsCollection.hh \
@@ -411,4 +411,4 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBCHESD.cc.o: \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4TouchableHistory.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ThreeVector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ios.hh \
- /vols/cms/mm1221/geant4sim/include/TrackPrimaryMap.hh
+ /vols/cms/mm1221/geant4sim/simulations/include/TrackPrimaryMap.hh

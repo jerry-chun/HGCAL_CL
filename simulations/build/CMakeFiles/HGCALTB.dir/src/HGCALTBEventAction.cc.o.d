@@ -1,7 +1,7 @@
 CMakeFiles/HGCALTB.dir/src/HGCALTBEventAction.cc.o: \
- /vols/cms/mm1221/geant4sim/src/HGCALTBEventAction.cc \
+ /vols/cms/mm1221/geant4sim/simulations/src/HGCALTBEventAction.cc \
  /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBEventAction.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBEventAction.hh \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/vector \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/bits/stl_algobase.h \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -238,8 +238,8 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBEventAction.cc.o: \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/bits/parse_numbers.h \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/bits/std_mutex.h \
  /cvmfs/sft.cern.ch/lcg/releases/gcc/12.1.0-57c96/x86_64-centos9/include/c++/12.1.0/bits/unique_lock.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBAHHit.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBConstants.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBAHHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBConstants.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SystemOfUnits.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/CLHEP/Units/SystemOfUnits.h \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/CLHEP/Units/defs.h \
@@ -253,13 +253,13 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBEventAction.cc.o: \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VHitsCollection.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/globals.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VHit.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEEHit.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ThreeVector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/CLHEP/Vector/ThreeVector.h \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/CLHEP/Vector/defs.h \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/CLHEP/Vector/ThreeVector.icc \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCHEHit.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBPrimaryGenAction.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCHEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBPrimaryGenAction.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VUserPrimaryGeneratorAction.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4GenericMessenger.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4AnyMethod.hh \
@@ -307,7 +307,7 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBEventAction.cc.o: \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4PrimaryVertex.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4PrimaryParticle.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ParticleMomentum.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEESD.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEESD.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VSensitiveDetector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4CollectionNameVector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4HCofThisEvent.hh \
@@ -423,12 +423,12 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBEventAction.cc.o: \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VReadOutGeometry.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SensitiveVolumeList.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VSDFilter.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEEHit.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCHESD.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCHEHit.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBAHCALSD.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBAHHit.hh \
- /vols/cms/mm1221/geant4sim/include/TrackPrimaryMap.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCHESD.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCHEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBAHCALSD.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBAHHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/TrackPrimaryMap.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4Event.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/evtdefs.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4DCofThisEvent.hh \

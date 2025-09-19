@@ -1,7 +1,7 @@
 CMakeFiles/HGCALTB.dir/src/HGCALTBCEESD.cc.o: \
- /vols/cms/mm1221/geant4sim/src/HGCALTBCEESD.cc \
+ /vols/cms/mm1221/geant4sim/simulations/src/HGCALTBCEESD.cc \
  /usr/include/stdc-predef.h \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEESD.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEESD.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VSensitiveDetector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4CollectionNameVector.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/globals.hh \
@@ -396,15 +396,15 @@ CMakeFiles/HGCALTB.dir/src/HGCALTBCEESD.cc.o: \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VReadOutGeometry.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SensitiveVolumeList.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VSDFilter.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEEHit.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4VHit.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4THitsCollection.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4ThreeVector.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBConstants.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBConstants.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SystemOfUnits.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4Types.hh \
- /vols/cms/mm1221/geant4sim/include/HGCALTBCEEHit.hh \
- /vols/cms/mm1221/geant4sim/include/TrackPrimaryMap.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/HGCALTBCEEHit.hh \
+ /vols/cms/mm1221/geant4sim/simulations/include/TrackPrimaryMap.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4HCofThisEvent.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4SDManager.hh \
  /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc12-opt/include/Geant4/G4HCtable.hh \
