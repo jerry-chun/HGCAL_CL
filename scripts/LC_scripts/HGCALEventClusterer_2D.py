@@ -22,17 +22,17 @@ class HGCALEventClusterer_2D:
         self.total_hits = 0
         self.total_layer_clusters = 0
         self.cluster_hit_counts = []
-        self.cluster_info = []          # list of dicts (summary per cluster)
-        self.cluster_purities = []      # list of floats in [0,1]
+        self.cluster_info = []          
+        self.cluster_purities = []      
 
         # cached arrays for event-level plotting
         self._cx = self._cy = self._cz = self._cE = self._cSID = None
 
-        # SID→color mapping for legends
+       
         self._sid_to_idx = None
         self._sid_palette_size = 0
 
-    # ---------- I/O ----------
+
     def read_event(self, x, y, z, e, layers, sids=None):
         self.x = np.asarray(x)
         self.y = np.asarray(y)
@@ -46,7 +46,7 @@ class HGCALEventClusterer_2D:
                 (self.sids is None or self.sids.size == n)):
             raise ValueError("x, y, z, e, layers (and sids if provided) must have the same length")
 
-        # reset results
+        
         self.total_hits = 0
         self.total_layer_clusters = 0
         self.cluster_hit_counts = []
@@ -63,7 +63,7 @@ class HGCALEventClusterer_2D:
             self._sid_to_idx = None
             self._sid_palette_size = 0
 
-    # ---------- Helpers ----------
+
     @staticmethod
     def _energy_weighted_sid_and_purity(sid_array, weight_array):
         """
@@ -169,7 +169,7 @@ class HGCALEventClusterer_2D:
             print(f"\nTotal hits in event: {self.total_hits}")
             print(f"Total layer clusters in event: {self.total_layer_clusters}")
 
-    # ---------- Accessors ----------
+
     def get_cluster_summary(self, as_dataframe=True):
         if len(self.cluster_info) == 0:
             print("No cluster info available; run cluster_event() first.")
@@ -319,7 +319,6 @@ class HGCALEventClusterer_2D:
             self._add_sid_legend(ax, cmap)
             plt.tight_layout(); plt.show()
 
-    # ---------- NEW: Purity histogram ----------
     def plot_cluster_purity_hist(self, bins=20):
         """
         Purity per cluster = (max energy contributed by any SID) / (total cluster energy).
@@ -367,7 +366,6 @@ class HGCALEventClusterer_2D:
         if self.x is None or self.sids is None:
             raise RuntimeError("Need hits and sids loaded. Call read_event(..., sids=...) first.")
 
-        # Exclude unwanted SIDs (e.g. -1)
         sids_arr = np.asarray(self.sids)
         if exclude_sid_values is not None and len(exclude_sid_values) > 0:
             mask_valid = ~np.isin(sids_arr, np.asarray(exclude_sid_values, dtype=int))
@@ -385,7 +383,7 @@ class HGCALEventClusterer_2D:
             m = (sv == sid)
             if weight_by_energy:
                 wsum = np.sum(ev[m])
-                if wsum <= 0:  # fallback to plain mean
+                if wsum <= 0: 
                     xb, yb, zb = np.mean(xv[m]), np.mean(yv[m]), np.mean(zv[m])
                 else:
                     xb = np.sum(xv[m] * ev[m]) / wsum
@@ -395,7 +393,6 @@ class HGCALEventClusterer_2D:
                 xb, yb, zb = np.mean(xv[m]), np.mean(yv[m]), np.mean(zv[m])
             barycenters.append((xb, yb, zb))
 
-        # Compute Euclidean distance between the two barycenters
         b0, b1 = barycenters
         separation = float(np.linalg.norm(np.array(b0) - np.array(b1)))
         return separation

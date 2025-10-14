@@ -5,7 +5,6 @@ import awkward as ak
 import uproot
 from HGCALEventClusterer_2D import HGCALEventClusterer_2D
 
-# (Keep your vstack patch if you need it)
 _orig_vstack = np.__dict__.get('_orig_vstack', np.vstack)
 def _patched_vstack(arrays, dtype=None):
     stacked = _orig_vstack(arrays)
@@ -25,7 +24,6 @@ def main():
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
-    # Derive default output name if not provided
     if not args.output:
         base = os.path.basename(args.input)
         rootless = base[:-5] if base.endswith(".root") else base
@@ -35,7 +33,6 @@ def main():
     tree = fin[args.tree]
     n_events = tree.num_entries
     
-    # Jagged outputs (lists of lists → converted to Awkward below)
     lc_layer, lc_cluster_id, lc_n_hits = [], [], []
     lc_energy, lc_x, lc_y, lc_z = [], [], [], []
     lc_shower_id, lc_purity = [], []
@@ -73,7 +70,6 @@ def main():
         if args.verbose and ((i+1) % 100 == 0 or (i+1) == n_events):
             print(f"Processed {i+1}/{n_events} events", flush=True)
 
-    # IMPORTANT: write as proper Awkward Arrays (prevents nlc_* count branches)
     friend = {
         "lc_layer":      ak.Array(lc_layer),
         "lc_cluster_id": ak.Array(lc_cluster_id),

@@ -6,7 +6,6 @@ def split_and_move_files(input_dir, output_dir, train_n=600, val_n=200, test_n=2
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
 
-    # Collect all ROOT files and sort them numerically
     files = sorted(input_dir.glob("*.root"))
 
     if len(files) < train_n + val_n + test_n:
@@ -35,7 +34,7 @@ def split_and_move_files(input_dir, output_dir, train_n=600, val_n=200, test_n=2
     for f in test_files:
         shutil.move(str(f), test_dir / f.name)
 
-    print(f"✅ Moved {len(train_files)} train, {len(val_files)} validation, and {len(test_files)} test files.")
+    print(f" Moved {len(train_files)} train, {len(val_files)} validation, and {len(test_files)} test files.")
 
 if __name__ == "__main__":
     input_path = "/vols/cms/mm1221/Independent/Files_merge/photons_2_merged/"

@@ -101,7 +101,6 @@ def main():
     hist = {"epoch": [], "train_loss": [], "val_loss": []}
 
     for epoch in range(1, args.epochs + 1):
-        # resample pos/neg pairs each epoch (deterministic)
         train_set.set_epoch(epoch); val_set.set_epoch(epoch)
 
         print(f"Epoch {epoch}/{args.epochs}")
@@ -125,14 +124,10 @@ def main():
         print(f"epoch={epoch} train={tr:.6f} val={va:.6f}")
 
     # save history
-    try:
-        import pandas as pd
-        import pandas as pd
-        import pandas as pd
-        df = pd.DataFrame(hist)
-        df.to_csv(run_dir / "loss.csv", index=False)
-    except Exception:
-        pass
+
+    df = pd.DataFrame(hist)
+    df.to_csv(run_dir / "loss.csv", index=False)
+
 
 if __name__ == "__main__":
     main()
