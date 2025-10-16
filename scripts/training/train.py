@@ -13,6 +13,11 @@ from losses import LOSS_ZOO
 def set_seeds(seed: int):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True; torch.backends.cudnn.benchmark = False
+@torch.no_grad()
+def offset_edges_fast(x_pe, x_ne, x_batch, x_ptr):
+    # x_ptr[x_batch] returns the start index of each node's graph
+    base = x_ptr[x_batch]              # shape [N]
+    return x_pe + base, x_ne + base
 
 def train_epoch(loader, model, optimizer, device, loss_fn, loss_kwargs):
     model.train(); total = 0.0
@@ -20,8 +25,10 @@ def train_epoch(loader, model, optimizer, device, loss_fn, loss_kwargs):
         data = data.to(device)
         optimizer.zero_grad()
         out = model(data.x, data.x_batch)
+        x_pe_global, x_ne_global = offset_edges_fast(data.x_pe, data.x_ne, data.x_batch, data.x_ptr)
+
         z = out[0] if isinstance(out, (tuple, list)) else out
-        loss = loss_fn(z, data.x_pe, data.x_ne, **loss_kwargs)
+        loss = loss_fn(z, x_pe_global, x_ne_global, **loss_kwargs)
         loss.backward(); optimizer.step()
         total += float(loss.item())
     return total / max(1, len(loader))
@@ -33,7 +40,8 @@ def eval_epoch(loader, model, device, loss_fn, loss_kwargs):
         data = data.to(device)
         out = model(data.x, data.x_batch)
         z = out[0] if isinstance(out, (tuple, list)) else out
-        loss = loss_fn(z, data.x_pe, data.x_ne, **loss_kwargs)
+        x_pe_global, x_ne_global = offset_edges_fast(data.x_pe, data.x_ne, data.x_batch, data.x_ptr)
+        loss = loss_fn(z, x_pe_global, x_ne_global, **loss_kwargs)
         total += float(loss.item())
     return total / max(1, len(loader))
 
@@ -101,6 +109,7 @@ def main():
     hist = {"epoch": [], "train_loss": [], "val_loss": []}
 
     for epoch in range(1, args.epochs + 1):
+        # resample pos/neg pairs each epoch (deterministic)
         train_set.set_epoch(epoch); val_set.set_epoch(epoch)
 
         print(f"Epoch {epoch}/{args.epochs}")
@@ -124,10 +133,14 @@ def main():
         print(f"epoch={epoch} train={tr:.6f} val={va:.6f}")
 
     # save history
-
-    df = pd.DataFrame(hist)
-    df.to_csv(run_dir / "loss.csv", index=False)
-
+    try:
+        import pandas as pd
+        import pandas as pd
+        import pandas as pd
+        df = pd.DataFrame(hist)
+        df.to_csv(run_dir / "loss.csv", index=False)
+    except Exception:
+        pass
 
 if __name__ == "__main__":
     main()

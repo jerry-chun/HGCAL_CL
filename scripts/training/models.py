@@ -32,7 +32,7 @@ class EdgeConvNet(nn.Module):
             x = x + conv(x, batch)  # residual
         return self.output(x), batch
 
-# Minimal “zoo” 
+# Minimal “zoo” so you can select by name without a registry framework
 MODEL_ZOO = {
     "edgeconv": EdgeConvNet,
 }

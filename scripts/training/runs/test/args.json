@@ -1,0 +1,23 @@
+{
+  "run_dir": "runs/test",
+  "seed": 1337,
+  "device": "cpu",
+  "batch_size": 4,
+  "max_events": 20,
+  "step_size": 1000,
+  "train_path": "/vols/cms/mm1221/Independent/Data/photons_2/train/",
+  "val_path": "/vols/cms/mm1221/Independent/Data/photons_2/val/",
+  "model": "edgeconv",
+  "hidden_dim": 128,
+  "num_layers": 3,
+  "dropout": 0.3,
+  "contrastive_dim": 16,
+  "k": 24,
+  "loss": "contrastive_pairs",
+  "temperature": 0.01,
+  "epochs": 30,
+  "lr": 0.001,
+  "step_size_sched": 50,
+  "gamma": 0.5,
+  "patience": 30
+}
