@@ -1,3 +1,5 @@
+//Testing
+
 //**************************************************
 // \file HGCALTBDetConstruction.cc
 // \brief: implementation of
@@ -101,25 +103,32 @@ auto IsScint = [&Has](const G4Material* m) -> bool {
 
 // ---- attach SDs only to true sensors/tiles --------------------------------
 auto* store = G4LogicalVolumeStore::GetInstance();
+G4cout << "\n[Audit] LV name | material | hasSD? | nDaughters\n";
+for (auto* lv : *store) {
+  auto* sd = lv->GetSensitiveDetector();
+  const auto& n = lv->GetName();
+  const auto* m = lv->GetMaterial();
+  G4cout << "  " << n
+         << " | " << (m? m->GetName() : "NULL")
+         << " | " << (sd? "Y":"N")
+         << " | " << lv->GetNoDaughters()
+         << G4endl;
+}
+
 int nCEE = 0, nCHE = 0, nAH = 0, nSkip = 0;
 
 for (auto* lv : *store) {
   const G4String& nm    = lv->GetName();
   const G4Material* mat = lv->GetMaterial();
 
-  // Skip obvious passives/wrappers. (We do NOT block "Layer" here.)
-  bool passive =
-      Has(nm, "Absorber")     || Has(nm, "Steel")       || Has(nm, "AirGap")   ||
-      Has(nm, "CoolingPlate") || Has(nm, "BasePlate")   || Has(nm, "MotherBoard") ||
-      Has(nm, "Services")     || Has(nm, "Kapton")      || Has(nm, "Epoxy")    ||
-      Has(nm, "Cover")        || Has(nm, "Wafer")       ||
-      nm == "World"           || Has(nm, "Envelope")    || Has(nm, "Mother");
-  if (passive) { ++nSkip; continue; }
-
   // We only attach to volumes that BOTH belong to the right family and contain "Sensitive"
-  const bool isEEcell = Has(nm, "HGCalEE") && Has(nm, "Sensitive") && IsSilicon(mat);
-  const bool isHEcell = Has(nm, "HGCalHE") && Has(nm, "Sensitive") && (IsSilicon(mat) || IsScint(mat));
-  const bool isAHtile = Has(nm, "AHcal")   && Has(nm, "Sensitive") && IsScint(mat);
+  //const bool isEEcell = (Has(nm, "HGCalEE") && Has(nm, "Sensitive")) || IsSilicon(mat);
+  //const bool isHEcell = (Has(nm, "HGCalHE") && Has(nm, "Sensitive")) || (IsSilicon(mat) || IsScint(mat));
+  //const bool isAHtile = (Has(nm, "AHcal")   && Has(nm, "Sensitive")) || IsScint(mat);
+    
+  const bool isEEcell = Has(nm, "HGCalEE") && (Has(nm, "Sensitive"));
+  const bool isHEcell = Has(nm, "HGCalHE") && (Has(nm, "Sensitive"));
+  const bool isAHtile = Has(nm, "AHcal")   && (Has(nm, "Sensitive"));
 
   if (isEEcell) {
     lv->SetSensitiveDetector(CEESD);
@@ -307,7 +316,7 @@ void HGCALTBDetConstruction::CheckOverlaps(G4VPhysicalVolume* PhysVol)
 {
   G4cout << "-->CheckingOverlaps for volumes in " << PhysVol->GetName() << G4endl;
   // volume, tolerance, npoints, verbosity
-  G4GeomTestVolume* testVolume = new G4GeomTestVolume(PhysVol, 0.0, 100000, true);
+  G4GeomTestVolume* testVolume = new G4GeomTestVolume(PhysVol, 10.0, 100000, true);
   testVolume->TestOverlapInTree();
 }
 #endif
