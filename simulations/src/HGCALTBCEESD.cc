@@ -3,34 +3,101 @@
 #include "HGCALTBCEEHit.hh"
 
 #include "TrackPrimaryMap.hh"
+
 #include "G4HCofThisEvent.hh"
 #include "G4SDManager.hh"
 #include "G4Step.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
+#include "G4AffineTransform.hh"
+#include "G4TouchableHistory.hh"
 #include "G4ios.hh"
-#include <algorithm> 
 
-#include <unordered_map>
-#include <vector>
-#include <limits>
+#include <algorithm>  // for std::max_element, etc.
 
-extern std::vector<double> gLayerZ;
+// Anonymous namespace for helper structs / functions
+namespace {
+  struct LayerRange {
+    double z_min;
+    double z_max;
+  };
 
-static inline int ZtoLayer(double z_cm)
-{
-  auto it = std::lower_bound(gLayerZ.begin(), gLayerZ.end(), z_cm);
-  if (it == gLayerZ.end()) return gLayerZ.size();       
-  return int(it - gLayerZ.begin()) + 1;                
-}
+  // 50 layers, indices 1..50 in the return value.
+  // Values taken from your histogram analysis.
+  static const LayerRange kLayerRanges[50] = {
+    {319.666, 322.166},
+    {322.166, 324.665},
+    {324.665, 327.164},
+    {327.164, 329.664},
+    {329.664, 332.165},
+    {332.165, 334.665},
+    {334.665, 337.165},
+    {337.165, 339.666},
+    {339.666, 342.166},
+    {342.166, 344.666},
+    {344.666, 347.165},
+    {347.165, 349.665},
+    {349.665, 352.165},
+    {352.165, 354.666},
+    {354.666, 357.166},
+    {357.166, 359.666},
+    {359.666, 362.166},
+    {362.166, 364.665},
+    {364.665, 367.166},
+    {367.166, 369.666},
+    {369.666, 372.166},
+    {372.166, 374.666},
+    {374.666, 377.165},
+    {377.165, 379.665},
+    {379.665, 382.165},
+    {382.165, 384.665},
+    {384.665, 387.165},
+    {387.165, 391.416},
+    {391.416, 396.916},
+    {396.916, 401.915},
+    {401.915, 406.916},
+    {406.916, 411.916},
+    {411.916, 416.916},
+    {416.916, 421.916},
+    {421.916, 426.916},
+    {426.916, 431.916},
+    {431.916, 436.916},
+    {436.916, 441.916},
+    {441.916, 446.916},
+    {446.916, 451.916},
+    {451.916, 456.915},
+    {456.915, 461.915},
+    {461.915, 466.916},
+    {466.916, 471.916},
+    {471.916, 476.916},
+    {476.916, 481.914},
+    {481.914, 486.914},
+    {486.914, 491.916},
+    {491.916, 496.918},
+    {496.918, 501.922}
+  };
 
+  // Map z (in cm) to layer index 1..50. Returns 0 if outside all ranges.
+  inline int ZtoLayer(double z_cm)
+  {
+    // Small tolerance so we don't lose hits at boundaries due to rounding
+    constexpr double eps = 1e-4; // 1 micron in cm
+    for (int i = 0; i < 50; ++i) {
+      if (z_cm >= kLayerRanges[i].z_min - eps &&
+          z_cm <= kLayerRanges[i].z_max + eps) {
+        return i + 1;  // layers numbered from 1
+      }
+    }
+    return 0; // no valid layer
+  }
 
-
+} // anonymous namespace
 
 const G4String HGCALTBCEESD::fCEEHitsCollectionName = "CEEHitsCollectionName";
 
 HGCALTBCEESD::HGCALTBCEESD(const G4String& name)
-  : G4VSensitiveDetector(name), fHitsCollection(nullptr)
+  : G4VSensitiveDetector(name),
+    fHitsCollection(nullptr)
 {
   collectionName.insert(fCEEHitsCollectionName);
 }
@@ -39,82 +106,154 @@ HGCALTBCEESD::~HGCALTBCEESD() {}
 
 void HGCALTBCEESD::Initialize(G4HCofThisEvent* hce)
 {
-  fHitsCollection = new HGCALTBCEEHitsCollection(SensitiveDetectorName, collectionName[0]);
+  // New hits collection for this event
+  fHitsCollection =
+    new HGCALTBCEEHitsCollection(SensitiveDetectorName, collectionName[0]);
+
   auto hcID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
   hce->AddHitsCollection(hcID, fHitsCollection);
+
+  // Clear per-event accumulator
+  fCellMap.clear();
+    
+  fStepEdepSum = 0.0;
 }
 
 G4bool HGCALTBCEESD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
-    auto edep = aStep->GetTotalEnergyDeposit();
-    if (aStep->GetTrack()->GetGlobalTime() > HGCALTBConstants::TimeCut || edep <= 0.) return false;
+  auto edep = aStep->GetTotalEnergyDeposit();
+  if (aStep->GetTrack()->GetGlobalTime() > HGCALTBConstants::TimeCut ||
+      edep <= 0.) {
+    return false;
+  }
+    
+  fStepEdepSum += edep;
 
-    auto pre = aStep->GetPreStepPoint();
-    auto touchable = pre->GetTouchableHandle();
-    auto pos = pre->GetPosition();
+  auto pre   = aStep->GetPreStepPoint();
+  auto track = aStep->GetTrack();
 
-    auto track = aStep->GetTrack();
-    G4int trackID  = track->GetTrackID();
-    G4int showerID = gTrackToPrimaryMap[trackID];
+  G4int trackID  = track->GetTrackID();
+  G4int showerID = gTrackToPrimaryMap[trackID];
 
-    double z_cm = pre->GetPosition().z() / CLHEP::cm;
-    G4int layer = ZtoLayer(z_cm); 
+  // --- Layer from the step position (same logic as your original code) ---
+  double z_step_cm = pre->GetPosition().z() / CLHEP::cm;
+  G4int layer = ZtoLayer(z_step_cm);
+  if (layer <= 0) {
+    // Outside known layer ranges; drop or debug-print if needed
+    return false;
+  }
 
-    auto hit = new HGCALTBCEEHit();
-    hit->SetEdep(edep);
-    hit->SetPosition(pos.x()/CLHEP::cm, pos.y()/CLHEP::cm, pos.z()/CLHEP::cm);
-    hit->SetTrackID(trackID);
-    hit->SetShowerID(showerID);
-    hit->SetLayer(layer);              
-    fHitsCollection->insert(hit);
-    return true;
+  // --- True cell center from geometry ---
+  const auto touchable = pre->GetTouchableHandle();
+
+  // Global center of this physical volume (cell)
+  G4ThreeVector globalCenter = touchable->GetTranslation();
+
+  // Convert center to cm
+  double cx_cm = globalCenter.x() / CLHEP::cm;
+  double cy_cm = globalCenter.y() / CLHEP::cm;
+  double cz_cm = globalCenter.z() / CLHEP::cm;
+
+  // Quantise to 1 cm grid (cell size) to get integer cell indices
+  int ix = static_cast<int>(std::lround(cx_cm));
+  int iy = static_cast<int>(std::lround(cy_cm));
+
+  // --- Accumulate in the per-cell map ---
+  CEECellKey key{layer, ix, iy};
+  auto& acc = fCellMap[key];  // creates if not present
+
+  // If this is the first step in this cell, record the center and track ID
+  if (!acc.hasCenter) {
+    acc.cx = cx_cm;
+    acc.cy = cy_cm;
+    acc.cz = cz_cm;
+    acc.hasCenter = true;
+  }
+  if (acc.firstTrackID < 0) {
+    acc.firstTrackID = trackID;
+  }
+
+  // Accumulate total energy
+  acc.edep += edep;
+
+  // Track energy contribution per shower so we can assign a dominant showerID
+  bool found = false;
+  for (auto& sh : acc.showerContribs) {
+    if (sh.first == showerID) {
+      sh.second += edep;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    acc.showerContribs.emplace_back(showerID, edep);
+  }
+
+  // We do NOT create a hit here anymore; we just accumulate.
+  return true;
 }
+
 
 void HGCALTBCEESD::EndOfEvent(G4HCofThisEvent*)
 {
+  double sumCellsEdep = 0.0; // from accumulators
 
-  const int nHits = fHitsCollection->entries();
+  // Convert accumulated cells into hits:
+  for (const auto& kv : fCellMap) {
+    const CEECellKey&   key = kv.first;
+    const CEECellAccum& acc = kv.second;
 
-  std::unordered_map<int, std::vector<int>> byLayer;
-  byLayer.reserve(nHits);
+    if (acc.edep <= 0.0 || !acc.hasCenter) continue;
 
-  for (int i = 0; i < nHits; ++i) {
-    auto* hit = (*fHitsCollection)[i];
-    int L = hit->GetLayer();
-    byLayer[L].push_back(i);
-  }
+    sumCellsEdep += acc.edep;  // DEBUG: sum of merged cell energies
 
-  for (auto& kv : byLayer) {
-    const int L = kv.first;
+    auto hit = new HGCALTBCEEHit();
 
-    if ((L % 2) != 0) continue;
-    if (L <= 1) continue;              
-    auto& idxs = kv.second;
-    if (idxs.size() < 2) continue;     
+    // True cell center from geometry (already in cm)
+    hit->SetPosition(acc.cx, acc.cy, acc.cz);
+    hit->SetEdep(acc.edep);
+    hit->SetTrackID(acc.firstTrackID);
+    hit->SetLayer(key.layer);
 
-    double zmin =  std::numeric_limits<double>::infinity();
-    double zmax = -std::numeric_limits<double>::infinity();
-
-    for (int i : idxs) {
-      auto* h = (*fHitsCollection)[i];
-      double z = h->GetZ();   
-      if (z < zmin) zmin = z;
-      if (z > zmax) zmax = z;
-    }
-
-    if (!(zmax > zmin)) continue;
-
-    const double zmid = 0.5 * (zmin + zmax);
-
-    for (int i : idxs) {
-      auto* h = (*fHitsCollection)[i];
-      double z = h->GetZ();  
-      if (z < zmid) {
-        h->SetLayer(L - 1);
+    // Choose the shower that contributed the most energy to this cell
+    int    dominantShowerID = -1;
+    double maxE             = 0.0;
+    for (const auto& sh : acc.showerContribs) {
+      if (sh.second > maxE) {
+        maxE = sh.second;
+        dominantShowerID = sh.first;
       }
     }
+    double purity = 0.0;
+    if (acc.edep > 0.0 && maxE > 0.0) {
+      purity = maxE / acc.edep;
+      if (purity > 1.0) purity = 1.0; // just in case of rounding
+    }
+    hit->SetShowerID(dominantShowerID);
+    hit->SetPurity(purity);
+
+    fHitsCollection->insert(hit);
   }
 
-  G4cout << "[CEE SD] EndOfEvent called. Total hits: "
-         << fHitsCollection->entries() << G4endl;
+  // DEBUG: also sum directly from the hits collection
+  double sumHitsEdep = 0.0;
+  for (G4int i = 0; i < fHitsCollection->entries(); ++i) {
+    sumHitsEdep += (*fHitsCollection)[i]->GetEdep();
+  }
+
+  G4cout << "[CEE SD] EndOfEvent: merged to "
+         << fHitsCollection->entries()
+         << " hits (one per cell per layer, at true cell centers)"
+         << G4endl;
+
+  G4cout << "  [CEE SD DEBUG] stepSum="
+         << fStepEdepSum / CLHEP::MeV << " MeV, "
+         << "cellSum="
+         << sumCellsEdep / CLHEP::MeV << " MeV, "
+         << "hitSum="
+         << sumHitsEdep / CLHEP::MeV << " MeV"
+         << G4endl;
+
+  // Clear accumulator to be safe (also done in Initialize())
+  fCellMap.clear();
 }

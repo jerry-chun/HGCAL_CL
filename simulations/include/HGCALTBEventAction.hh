@@ -33,6 +33,7 @@ public:
     std::vector<G4int> hit_trackid;
     std::vector<G4int> hit_showerid;
     std::vector<G4int> hit_detector;
+    std::vector<G4double> hit_purity;
     std::vector<G4double>& GetPrimaryEnergies() { return fPrimaryGenAction->GetPrimaryEnergies(); }
     std::vector<G4int>&    GetPrimaryPDGIDs()   { return fPrimaryGenAction->GetPrimaryPDGIDs(); }
     

@@ -43,6 +43,7 @@ private:
 
     // stored as string, parsed into vector on each event
     G4String            fParticleTypesStr;
+    G4double fDelta;
 
     // helper to split fParticleTypesStr
     std::vector<G4String> ParseParticleTypes() const;

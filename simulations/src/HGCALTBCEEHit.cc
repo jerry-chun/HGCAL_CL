@@ -2,10 +2,10 @@
 #include "HGCALTBCEEHit.hh"
 
 HGCALTBCEEHit::HGCALTBCEEHit()
-  : G4VHit(), fX(-1.), fY(-1.), fZ(-1.), fEdep(0.) {}
+  : G4VHit(), fX(-1.), fY(-1.), fZ(-1.), fEdep(0.), fPurity(0.0) {}
 
 HGCALTBCEEHit::HGCALTBCEEHit(const HGCALTBCEEHit& right)
-  : G4VHit(), fX(right.fX), fY(right.fY), fZ(right.fZ), fEdep(right.fEdep) {}
+  : G4VHit(), fX(right.fX), fY(right.fY), fZ(right.fZ), fEdep(right.fEdep), fPurity(right.fPurity) {}
 
 HGCALTBCEEHit::~HGCALTBCEEHit() {}
 
@@ -15,6 +15,7 @@ const HGCALTBCEEHit& HGCALTBCEEHit::operator=(const HGCALTBCEEHit& right)
   fY = right.fY;
   fZ = right.fZ;
   fEdep = right.fEdep;
+  fPurity   = right.fPurity;
   return *this;
 }
 

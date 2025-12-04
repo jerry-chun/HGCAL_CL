@@ -43,6 +43,9 @@ class HGCALTBCHEHit : public G4VHit
     void SetLayer(G4int l) { fLayer = l; }
     G4int GetLayer() const { return fLayer; }
     
+    void SetPurity(G4double p) { fPurity = p; }
+    G4double GetPurity() const { return fPurity; }
+    
 
   private:
     std::array<G4double, HGCALTBConstants::CHECells + 1> fCHESignals;
@@ -51,6 +54,7 @@ class HGCALTBCHEHit : public G4VHit
     G4int fTrackID;
     G4int fShowerID;
     G4int fLayer = -1;
+    G4double fPurity;
 };
 
 using HGCALTBCHEHitsCollection = G4THitsCollection<HGCALTBCHEHit>;

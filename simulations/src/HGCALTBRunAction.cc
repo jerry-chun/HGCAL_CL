@@ -38,6 +38,8 @@ HGCALTBRunAction::HGCALTBRunAction(HGCALTBEventAction* eventAction, G4String fil
     analysisManager->CreateNtupleIColumn("hit_showerid", fEventAction->hit_showerid);    // 18
     analysisManager->CreateNtupleIColumn("hit_detector", fEventAction->hit_detector);    // 19
     analysisManager->CreateNtupleIColumn("hit_layer",    fEventAction->hit_layer);       // 20  <-- NEW
+    analysisManager->CreateNtupleDColumn("hit_purity",   fEventAction->hit_purity);      // 21  <-- NEW
+
 
     analysisManager->CreateNtupleIColumn("CEEHitCount");                                    // 21
     analysisManager->CreateNtupleDColumn("PrimaryEnergies", fEventAction->GetPrimaryEnergies()); // 22

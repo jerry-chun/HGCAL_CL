@@ -34,6 +34,9 @@ class HGCALTBCEEHit : public G4VHit
     
     void SetLayer(G4int l) { fLayer = l; }
     G4int GetLayer() const { return fLayer; }
+    
+    void SetPurity(G4double p) { fPurity = p; }
+    G4double GetPurity() const { return fPurity; }
 
   private:
     G4double fX, fY, fZ;
@@ -41,6 +44,7 @@ class HGCALTBCEEHit : public G4VHit
     G4int fTrackID;
     G4int fShowerID;
     G4int fLayer = -1;
+    G4double fPurity;
 };
 
 using HGCALTBCEEHitsCollection = G4THitsCollection<HGCALTBCEEHit>;

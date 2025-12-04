@@ -2,7 +2,7 @@
 
 HGCALTBCHEHit::HGCALTBCHEHit()
   : G4VHit(), fCHESignals({}), fX(-1.), fY(-1.), fZ(-1.), fEdep(0.),
-    fTrackID(0), fShowerID(0), fLayer(-1) {}
+    fTrackID(0), fShowerID(0), fLayer(-1), fPurity(0.0) {}
 
 HGCALTBCHEHit::HGCALTBCHEHit(const HGCALTBCHEHit& right)
   : G4VHit(),
@@ -10,7 +10,7 @@ HGCALTBCHEHit::HGCALTBCHEHit(const HGCALTBCHEHit& right)
     fX(right.fX), fY(right.fY), fZ(right.fZ),
     fEdep(right.fEdep),
     fTrackID(right.fTrackID), fShowerID(right.fShowerID),
-    fLayer(right.fLayer) {}
+    fLayer(right.fLayer), fPurity(right.fPurity) {}
 
 HGCALTBCHEHit::~HGCALTBCHEHit() = default;   
 
@@ -22,6 +22,7 @@ const HGCALTBCHEHit& HGCALTBCHEHit::operator=(const HGCALTBCHEHit& right)
   fEdep = right.fEdep;
   fTrackID = right.fTrackID; fShowerID = right.fShowerID;
   fLayer = right.fLayer;
+  fPurity    = right.fPurity;
   return *this;
 }
 

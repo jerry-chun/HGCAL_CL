@@ -17,6 +17,7 @@
 #include "G4PhysListFactory.hh"
 #include "G4UImanager.hh"
 #include "G4UIcommand.hh"
+#include "G4SystemOfUnits.hh"
 
 // CLI string outputs
 namespace CLIOutputs {
@@ -42,58 +43,101 @@ namespace PrintPLFactoryUsageError {
 
 int main(int argc, char** argv) {
     G4String macro;
-    G4String custom_pl   = "FTFP_BERT";
+    G4String custom_pl    = "FTFP_BERT";
     G4String custom_fname = "";
+
 #ifdef G4MULTITHREADED
     G4int nThreads = G4Threading::G4GetNumberOfCores();
 #endif
 
-    // Parse CLI
-    for (G4int i = 1; i < argc; i += 2) {
+    // ============================
+    // Parse CLI arguments (fixed)
+    // ============================
+    //
+    // We iterate with ++i and only advance i again when consuming
+    // an argument for an option. This avoids skipping tokens and
+    // mis-reading values as options.
+    //
+    for (G4int i = 1; i < argc; ++i) {
         G4String opt = argv[i];
-        if      (opt == "-m") macro = argv[++i];
-        else if (opt == "-p") custom_pl = argv[++i];
-        else if (opt == "-f") custom_fname = argv[++i];
+
+        if (opt == "-h") {
+            CLIOutputs::PrintHelp();
+            return 0;
+        }
+        else if (opt == "-m") {
+            if (i + 1 >= argc) { CLIOutputs::PrintError(); return 1; }
+            macro = argv[++i];
+        }
+        else if (opt == "-p") {
+            if (i + 1 >= argc) { CLIOutputs::PrintError(); return 1; }
+            custom_pl = argv[++i];
+        }
+        else if (opt == "-f") {
+            if (i + 1 >= argc) { CLIOutputs::PrintError(); return 1; }
+            custom_fname = argv[++i];
+        }
 #ifdef G4MULTITHREADED
-        else if (opt == "-t") nThreads = G4UIcommand::ConvertToInt(argv[++i]);
+        else if (opt == "-t") {
+            if (i + 1 >= argc) { CLIOutputs::PrintError(); return 1; }
+            nThreads = G4UIcommand::ConvertToInt(argv[++i]);
+        }
 #endif
-        else if (opt == "-h") { CLIOutputs::PrintHelp(); return 0; }
-        else { CLIOutputs::PrintError(); return 1; }
+        else {
+            // Unknown option
+            CLIOutputs::PrintError();
+            return 1;
+        }
     }
 
-    // Require macro for batch-only
+    // Require macro for batch-only mode
     if (macro.empty()) {
         CLIOutputs::PrintHelp();
         return 1;
     }
 
+    // ============================
     // Run manager
+    // ============================
 #ifdef G4MULTITHREADED
     auto runManager = new G4MTRunManager;
-    if (nThreads > 0) runManager->SetNumberOfThreads(nThreads);
+    if (nThreads > 0) {
+        runManager->SetNumberOfThreads(nThreads);
+    }
 #else
     auto runManager = new G4RunManager;
 #endif
 
+    // ============================
     // Physics list
+    // ============================
     auto physListFactory = new G4PhysListFactory();
     if (!physListFactory->IsReferencePhysList(custom_pl)) {
         PrintPLFactoryUsageError::PLFactoryUsageError();
+        delete runManager;
         return 1;
     }
     auto physicsList = physListFactory->GetReferencePhysList(custom_pl);
     runManager->SetUserInitialization(physicsList);
 
+    // ============================
     // Detector and actions
+    // ============================
     runManager->SetUserInitialization(new HGCALTBDetConstruction());
+    // Pass custom_fname into the action initialization so it can
+    // set the output ROOT filename.
     runManager->SetUserInitialization(new HGCALTBActInitialization(custom_fname));
 
-    // Execute macro in batch mode (no visualization)
+    // ============================
+    // Execute macro (batch mode)
+    // ============================
     auto UImanager = G4UImanager::GetUIpointer();
     G4String cmd = "/control/execute ";
     UImanager->ApplyCommand(cmd + macro);
 
+    // ============================
     // Cleanup
+    // ============================
     delete runManager;
     return 0;
 }

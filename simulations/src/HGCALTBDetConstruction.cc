@@ -122,13 +122,13 @@ for (auto* lv : *store) {
   const G4Material* mat = lv->GetMaterial();
 
   // We only attach to volumes that BOTH belong to the right family and contain "Sensitive"
-  //const bool isEEcell = (Has(nm, "HGCalEE") && Has(nm, "Sensitive")) || IsSilicon(mat);
-  //const bool isHEcell = (Has(nm, "HGCalHE") && Has(nm, "Sensitive")) || (IsSilicon(mat) || IsScint(mat));
-  //const bool isAHtile = (Has(nm, "AHcal")   && Has(nm, "Sensitive")) || IsScint(mat);
+  const bool isEEcell = (Has(nm, "HGCalEE"));
+  const bool isHEcell = (Has(nm, "HGCalHE"));
+  const bool isAHtile = (Has(nm, "AHcal"));
     
-  const bool isEEcell = Has(nm, "HGCalEE") && (Has(nm, "Sensitive"));
-  const bool isHEcell = Has(nm, "HGCalHE") && (Has(nm, "Sensitive"));
-  const bool isAHtile = Has(nm, "AHcal")   && (Has(nm, "Sensitive"));
+  //const bool isEEcell = Has(nm, "HGCalEE") && (Has(nm, "Layer"));
+  //const bool isHEcell = Has(nm, "HGCalHE") && (Has(nm, "Layer"));
+  //const bool isAHtile = Has(nm, "AHcal")   && (Has(nm, "Layer"));
 
   if (isEEcell) {
     lv->SetSensitiveDetector(CEESD);

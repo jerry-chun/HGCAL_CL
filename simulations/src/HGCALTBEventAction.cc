@@ -16,6 +16,7 @@
 #include <numeric>
 #include <algorithm>
 
+
 HGCALTBEventAction::HGCALTBEventAction(HGCALTBPrimaryGenAction* PGA)
   : G4UserEventAction(), edep(0.), fIntLayer(0), fPrimaryGenAction(PGA), fCEEHCID(-1), fCHEHCID(-1)
 {
@@ -37,6 +38,7 @@ HGCALTBEventAction::~HGCALTBEventAction() {}
 void HGCALTBEventAction::BeginOfEventAction(const G4Event*)
 {
   gTrackToPrimaryMap.clear();
+  currentShowerIndex = 0;
   edep = 0.;
   cee_hit_count = 0;
   fIntLayer = 0;
@@ -47,6 +49,7 @@ void HGCALTBEventAction::BeginOfEventAction(const G4Event*)
   hit_trackid.clear(); hit_showerid.clear(); 
   hit_detector.clear();
   hit_layer.clear();
+  hit_purity.clear();
 }
 
 HGCALTBCEEHitsCollection* HGCALTBEventAction::GetCEEHitsCollection(G4int hcID, const G4Event* event) const
@@ -91,7 +94,7 @@ void HGCALTBEventAction::EndOfEventAction(const G4Event* event)
   for (G4int i = 0; i < CEEHC->GetSize(); ++i) {
     auto hit = (*CEEHC)[i];
     G4double edep_MeV = hit->GetEdep() / CLHEP::MeV;
-    if (edep_MeV > 0) {
+    if (edep_MeV > 0.01) {
       hits_x.push_back(hit->GetX());
       hits_y.push_back(hit->GetY());
       hits_z.push_back(hit->GetZ());
@@ -100,6 +103,7 @@ void HGCALTBEventAction::EndOfEventAction(const G4Event* event)
       hit_showerid.push_back(hit->GetShowerID());
       hit_detector.push_back(HGCALDetID::kCEE);   
       hit_layer.push_back(hit->GetLayer());
+      hit_purity.push_back(hit->GetPurity());
     }
   }
   cee_hit_count = std::count(hit_detector.begin(), hit_detector.end(), HGCALDetID::kCEE);
@@ -108,7 +112,7 @@ void HGCALTBEventAction::EndOfEventAction(const G4Event* event)
     for (G4int i = 0; i < CHEHC->GetSize(); ++i) {
       auto hit = (*CHEHC)[i];
       G4double edep_MeV = hit->GetEdep() / CLHEP::MeV;
-      if (edep_MeV > 0) {
+      if (edep_MeV > 0.01) {
         hits_x.push_back(hit->GetX());
         hits_y.push_back(hit->GetY());
         hits_z.push_back(hit->GetZ());
@@ -117,6 +121,7 @@ void HGCALTBEventAction::EndOfEventAction(const G4Event* event)
         hit_showerid.push_back(hit->GetShowerID());
         hit_detector.push_back(HGCALDetID::kCHE);
         hit_layer.push_back(hit->GetLayer());
+        hit_purity.push_back(hit->GetPurity());
       }
     }
   }
