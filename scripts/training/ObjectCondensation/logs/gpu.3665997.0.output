@@ -1,0 +1,8 @@
+Loading data...
+### Loading data
+### Loading data
+Starting Object Condensation training...
+Epoch 1/100
+Epoch 1/100 - Train Loss: 0.22694635, Validation Loss: 0.15365633
+Appended epoch 1 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_FULL_hd64_nl5_k32_dp0038_nh8_ehd16_eod16/training_loss.csv
+Epoch 2/100

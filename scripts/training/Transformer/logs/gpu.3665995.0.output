@@ -1,0 +1,11 @@
+Loading data...
+### Loading data
+### Loading data
+Starting full training with curriculum for hard negative mining...
+Epoch 1/100
+Epoch 1/100 - Train Loss: 0.33549915, Validation Loss: 0.31391621
+Appended epoch 1 to /vols/cms/mm1221/Independent/Transformer/runs/Electron_FULL_hd64_nl5_k32_dp0038_nh8_ehd16_eod16/training_loss.csv
+Epoch 2/100
+Epoch 2/100 - Train Loss: 0.31277274, Validation Loss: 0.31035348
+Appended epoch 2 to /vols/cms/mm1221/Independent/Transformer/runs/Electron_FULL_hd64_nl5_k32_dp0038_nh8_ehd16_eod16/training_loss.csv
+Epoch 3/100

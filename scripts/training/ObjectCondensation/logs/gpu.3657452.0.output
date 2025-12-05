@@ -1,0 +1,176 @@
+Loading data...
+### Loading data
+### Loading data
+Starting Object Condensation training...
+Epoch 1/100
+Epoch 1/100 - Train Loss: 0.27296110, Validation Loss: 0.86967979
+Appended epoch 1 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 2/100
+Epoch 2/100 - Train Loss: 0.16865435, Validation Loss: 0.15849253
+Appended epoch 2 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 3/100
+Epoch 3/100 - Train Loss: 0.15811411, Validation Loss: 0.15859022
+Appended epoch 3 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 4/100
+Epoch 4/100 - Train Loss: 0.15646246, Validation Loss: 0.15421963
+Appended epoch 4 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 5/100
+Epoch 5/100 - Train Loss: 0.15429550, Validation Loss: 0.15175791
+Appended epoch 5 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 6/100
+Epoch 6/100 - Train Loss: 0.15366511, Validation Loss: 0.15273898
+Appended epoch 6 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 7/100
+Epoch 7/100 - Train Loss: 0.15248674, Validation Loss: 0.15223658
+Appended epoch 7 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 8/100
+Epoch 8/100 - Train Loss: 0.15158903, Validation Loss: 0.14999428
+Appended epoch 8 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 9/100
+Epoch 9/100 - Train Loss: 0.15116312, Validation Loss: 0.14938375
+Appended epoch 9 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 10/100
+Epoch 10/100 - Train Loss: 0.15064917, Validation Loss: 0.14906018
+Appended epoch 10 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 11/100
+Epoch 11/100 - Train Loss: 0.15032789, Validation Loss: 0.14854880
+Appended epoch 11 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 12/100
+Epoch 12/100 - Train Loss: 0.15035995, Validation Loss: 0.14903821
+Appended epoch 12 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 13/100
+Epoch 13/100 - Train Loss: 0.15211790, Validation Loss: 0.14899128
+Appended epoch 13 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 14/100
+Epoch 14/100 - Train Loss: 0.15046375, Validation Loss: 0.14825874
+Appended epoch 14 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 15/100
+Epoch 15/100 - Train Loss: 0.14984107, Validation Loss: 0.14786991
+Appended epoch 15 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 16/100
+Epoch 16/100 - Train Loss: 0.14970996, Validation Loss: 0.14851832
+Appended epoch 16 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 17/100
+Epoch 17/100 - Train Loss: 0.15369762, Validation Loss: 0.15187556
+Appended epoch 17 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 18/100
+Epoch 18/100 - Train Loss: 0.15300741, Validation Loss: 0.15053493
+Appended epoch 18 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 19/100
+Epoch 19/100 - Train Loss: 0.15035023, Validation Loss: 0.14707182
+Appended epoch 19 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 20/100
+Epoch 20/100 - Train Loss: 0.14964918, Validation Loss: 0.16171013
+Appended epoch 20 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 21/100
+Epoch 21/100 - Train Loss: 0.14885689, Validation Loss: 0.14822748
+Appended epoch 21 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 22/100
+Epoch 22/100 - Train Loss: 0.15165971, Validation Loss: 0.14990809
+Appended epoch 22 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 23/100
+Epoch 23/100 - Train Loss: 0.15132313, Validation Loss: 0.14976539
+Appended epoch 23 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 24/100
+Epoch 24/100 - Train Loss: 0.15041893, Validation Loss: 0.14677574
+Appended epoch 24 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 25/100
+Epoch 25/100 - Train Loss: 0.14987919, Validation Loss: 0.14973755
+Appended epoch 25 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 26/100
+Epoch 26/100 - Train Loss: 0.15152673, Validation Loss: 0.14888437
+Appended epoch 26 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 27/100
+Epoch 27/100 - Train Loss: 0.15029117, Validation Loss: 0.14825265
+Appended epoch 27 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 28/100
+Epoch 28/100 - Train Loss: 0.15013809, Validation Loss: 0.14869068
+Appended epoch 28 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 29/100
+Epoch 29/100 - Train Loss: 0.14890394, Validation Loss: 0.14863864
+Appended epoch 29 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 30/100
+Epoch 30/100 - Train Loss: 0.15001984, Validation Loss: 0.14741077
+Appended epoch 30 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 31/100
+Epoch 31/100 - Train Loss: 0.14938461, Validation Loss: 0.14747009
+Appended epoch 31 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 32/100
+Epoch 32/100 - Train Loss: 0.14911296, Validation Loss: 0.14668844
+Appended epoch 32 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 33/100
+Epoch 33/100 - Train Loss: 0.14850560, Validation Loss: 0.14841191
+Appended epoch 33 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 34/100
+Epoch 34/100 - Train Loss: 0.14962119, Validation Loss: 0.15109215
+Appended epoch 34 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 35/100
+Epoch 35/100 - Train Loss: 0.15011038, Validation Loss: 0.14606738
+Appended epoch 35 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 36/100
+Epoch 36/100 - Train Loss: 0.14896844, Validation Loss: 0.14573155
+Appended epoch 36 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 37/100
+Epoch 37/100 - Train Loss: 0.14786066, Validation Loss: 0.14783234
+Appended epoch 37 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 38/100
+Epoch 38/100 - Train Loss: 0.14797719, Validation Loss: 0.14694925
+Appended epoch 38 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 39/100
+Epoch 39/100 - Train Loss: 0.15004132, Validation Loss: 0.14831181
+Appended epoch 39 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 40/100
+Epoch 40/100 - Train Loss: 0.15057950, Validation Loss: 0.14804730
+Appended epoch 40 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 41/100
+Epoch 41/100 - Train Loss: 0.14959865, Validation Loss: 0.14791113
+Appended epoch 41 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 42/100
+Epoch 42/100 - Train Loss: 0.14936449, Validation Loss: 0.14668333
+Appended epoch 42 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 43/100
+Epoch 43/100 - Train Loss: 0.14884224, Validation Loss: 0.14627512
+Appended epoch 43 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 44/100
+Epoch 44/100 - Train Loss: 0.14921420, Validation Loss: 0.14786844
+Appended epoch 44 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 45/100
+Epoch 45/100 - Train Loss: 0.14900052, Validation Loss: 0.14671975
+Appended epoch 45 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 46/100
+Epoch 46/100 - Train Loss: 0.14912596, Validation Loss: 0.14713491
+Appended epoch 46 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 47/100
+Epoch 47/100 - Train Loss: 0.14901179, Validation Loss: 0.14750781
+Appended epoch 47 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 48/100
+Epoch 48/100 - Train Loss: 0.14895754, Validation Loss: 0.14703565
+Appended epoch 48 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 49/100
+Epoch 49/100 - Train Loss: 0.14886399, Validation Loss: 0.14784686
+Appended epoch 49 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 50/100
+Epoch 50/100 - Train Loss: 0.14907582, Validation Loss: 0.14767087
+Appended epoch 50 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 51/100
+Epoch 51/100 - Train Loss: 0.14908092, Validation Loss: 0.14742054
+Appended epoch 51 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 52/100
+Epoch 52/100 - Train Loss: 0.14890902, Validation Loss: 0.14677590
+Appended epoch 52 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 53/100
+Epoch 53/100 - Train Loss: 0.14875419, Validation Loss: 0.14672051
+Appended epoch 53 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 54/100
+Epoch 54/100 - Train Loss: 0.14868893, Validation Loss: 0.14635108
+Appended epoch 54 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 55/100
+Epoch 55/100 - Train Loss: 0.14842433, Validation Loss: 0.14676031
+Appended epoch 55 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 56/100
+Epoch 56/100 - Train Loss: 0.14829272, Validation Loss: 0.14669450
+Appended epoch 56 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 57/100
+Epoch 57/100 - Train Loss: 0.14885299, Validation Loss: 0.14870144
+Appended epoch 57 to /vols/cms/mm1221/Independent/ObjectCondensation/runs/Electron_hd64_nl4_k36/training_loss.csv
+Epoch 58/100
