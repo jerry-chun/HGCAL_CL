@@ -23,6 +23,7 @@ def train_oc(
 ):
     model.train()
     total_loss = 0.0
+    num_batches = 0
 
     for data in tqdm(train_loader, desc="Training (OC)"):
         data = data.to(device, non_blocking=True)
@@ -46,13 +47,20 @@ def train_oc(
                 event_beta = beta[start_idx:end_idx]
                 event_groups = assoc_tensor[start_idx:end_idx]
 
+                # skip single
+                num_groups = torch.unique(event_groups).numel()
+
+                if num_groups <= 1 or num_groups >= 11:
+                    start_idx = end_idx
+                    continue
+
                 loss_event = object_condensation_loss(
                     beta=event_beta,
                     cluster_coords=event_cluster,
                     group_ids=event_groups,
                     q_min=q_min,
                     noise_label=noise_label,
-                    weights=None,         
+                    weights=None,
                     s_att=s_att,
                     s_rep=s_rep,
                     s_coward=s_coward,
@@ -61,6 +69,10 @@ def train_oc(
                 losses.append(loss_event)
                 start_idx = end_idx
 
+            if len(losses) == 0:
+                # no usable events in this batch
+                continue
+
             loss = torch.stack(losses).mean()
 
         scaler.scale(loss).backward()
@@ -68,8 +80,12 @@ def train_oc(
         scaler.update()
 
         total_loss += loss.item()
+        num_batches += 1
 
-    return total_loss / len(train_loader)
+    if num_batches == 0:
+        return 0.0
+
+    return total_loss / num_batches
 
 
 @torch.no_grad()
@@ -87,6 +103,7 @@ def test_oc(
 ):
     model.eval()
     total_loss = 0.0
+    num_batches = 0
 
     for data in tqdm(val_loader, desc="Validation (OC)"):
         data = data.to(device, non_blocking=True)
@@ -108,6 +125,12 @@ def test_oc(
                 event_beta = beta[start_idx:end_idx]
                 event_groups = assoc_tensor[start_idx:end_idx]
 
+                num_groups = torch.unique(event_groups).numel()
+
+                if num_groups <= 1 or num_groups >= 11:
+                    start_idx = end_idx
+                    continue
+
                 loss_event = object_condensation_loss(
                     beta=event_beta,
                     cluster_coords=event_cluster,
@@ -123,9 +146,16 @@ def test_oc(
                 losses.append(loss_event)
                 start_idx = end_idx
 
+            if len(losses) == 0:
+                # no usable events in this batch
+                continue
+
             loss = torch.stack(losses).mean()
 
         total_loss += loss.item()
+        num_batches += 1
 
-    return total_loss / len(val_loader)
+    if num_batches == 0:
+        return 0.0
 
+    return total_loss / num_batches

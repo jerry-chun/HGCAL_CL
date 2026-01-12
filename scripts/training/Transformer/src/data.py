@@ -1,160 +1,151 @@
-#!/usr/bin/env python3
-# data.py
+import numpy as np
+import subprocess
+import tqdm
+from tqdm import tqdm
+import pandas as pd
 
+import os
 import os.path as osp
+
 import glob
 
-import numpy as np
-import awkward as ak
+import h5py
 import uproot
 
 import torch
-from torch_geometric.data import Data, Dataset
-from tqdm import tqdm
+from torch import nn
+
+
+from torch_geometric.data import Data
+from torch_geometric.data import Dataset
+from torch_geometric.data import DataLoader
+
+import awkward as ak
+import random
+
+#singularity shell --bind /afs/cern.ch/user/p/pkakhand/public/CL/  /afs/cern.ch/user/p/pkakhand/geometricdl.sif
+
+#singularity shell --bind /eos/project/c/contrast/public/solar/  /afs/cern.ch/user/p/pkakhand/geometricdl.sif
+#source /cvmfs/sft.cern.ch/lcg/views/LCG_103cuda/x86_64-centos9-gcc11-opt/setup.sh
+
 
 class CCV1(Dataset):
-    """
-    Contrastive Clustering V1 dataset.
+    r'''
+        input: layer clusters
 
-    Expects ROOT files in `root/raw/` with a TTree (default name "HGCALTBout")
-    containing per-event jagged arrays with branches:
+    '''
 
-      - hit_x
-      - hit_y
-      - hit_z
-      - hit_Edep
-      - hit_layer
-      - hit_showerid
-      - hit_purity
+    url = '/dummy/'
 
-    Each event i becomes a torch_geometric Data object with:
+    def __init__(self, root, transform=None, max_events=1e8, inp = 'train'):
+        super(CCV1, self).__init__(root, transform)
+        self.step_size = 500
+        self.inp = inp
+        self.max_events = max_events
+        self.fill_data(max_events)
 
-      - x:      [N_i, 5]  (x, y, z, Edep, layer)
-      - assoc:  [N_i]     (shower id per hit)
-      - purity: [N_i]
-    """
+    def fill_data(self,max_events):
+        counter = 0
+        arrLens0 = []
+        arrLens1 = []
 
-    url = "/dummy/"
+        print("### Loading data")
+        for fi,path in enumerate(tqdm(self.raw_paths)):
+            
+            for array in uproot.iterate(f"{path}:HGCALTBout", ["hit_x", "hit_y", "hit_z", "hit_Edep", "hit_layer", 
+                                                               "hit_showerid", "hit_purity"], step_size=self.step_size):
+            
+                tmp_stsCP_vertices_x = array['hit_x']
+                tmp_stsCP_vertices_y = array['hit_y']
+                tmp_stsCP_vertices_z = array['hit_z']
+                tmp_stsCP_vertices_energy = array['hit_Edep']
+                tmp_stsCP_vertices_indexes = array['hit_showerid']
+                tmp_stsCP_vertices_purity = array['hit_purity']
+                tmp_stsCP_vertices_layer_id = array['hit_layer']
 
-    def __init__(
-        self,
-        root,
-        split="train",
-        step_size=200,     # bumped up by default: fewer chunks = faster
-        max_events=int(1e8),
-        transform=None,
-    ):
-        super().__init__(root, transform)
-        self.split = split
-        self.step_size = int(step_size)
-        self.max_events = int(max_events)
-        self._epoch = 0
+                
+                # weighted energies (A LC appears in its caloparticle assignment array as the energy it contributes not full energy)
+                #tmp_stsCP_vertices_energy = tmp_stsCP_vertices_energy * tmp_stsCP_vertices_multiplicity
+                
+                self.step_size = min(self.step_size,len(tmp_stsCP_vertices_x))
 
-        # Load everything into memory once (but efficiently)
-        self.fill_data(self.max_events)
+                if counter == 0:
+                    self.stsCP_vertices_x = tmp_stsCP_vertices_x
+                    self.stsCP_vertices_y = tmp_stsCP_vertices_y
+                    self.stsCP_vertices_z = tmp_stsCP_vertices_z
+                    self.stsCP_vertices_energy = tmp_stsCP_vertices_energy
+                    self.stsCP_vertices_layer_id = tmp_stsCP_vertices_layer_id
+                    self.stsCP_vertices_indexes = tmp_stsCP_vertices_indexes
+                    self.stsCP_stsCP_vertices_purity = tmp_stsCP_vertices_purity
+                else:
+                    self.stsCP_vertices_x = ak.concatenate((self.stsCP_vertices_x,tmp_stsCP_vertices_x))
+                    self.stsCP_vertices_y = ak.concatenate((self.stsCP_vertices_y,tmp_stsCP_vertices_y))
+                    self.stsCP_vertices_z = ak.concatenate((self.stsCP_vertices_z,tmp_stsCP_vertices_z))
+                    self.stsCP_vertices_energy = ak.concatenate((self.stsCP_vertices_energy,tmp_stsCP_vertices_energy))
+                    self.stsCP_vertices_layer_id = ak.concatenate((self.stsCP_vertices_layer_id,tmp_stsCP_vertices_layer_id))
+                    self.stsCP_vertices_indexes = ak.concatenate((self.stsCP_vertices_indexes,tmp_stsCP_vertices_indexes))
+                    self.stsCP_stsCP_vertices_purity = ak.concatenate((self.stsCP_stsCP_vertices_purity, tmp_stsCP_vertices_purity))
 
-    def set_epoch(self, epoch: int):
-        self._epoch = epoch
+                #print(len(self.stsCP_vertices_x))
+                counter += 1
+                if len(self.stsCP_vertices_x) > max_events:
+                    print(f"Reached {max_events}!")
+                    break
+            if len(self.stsCP_vertices_x) > max_events:
+                break
+     
+            
+            
+    def download(self):
+        raise RuntimeError(
+            'Dataset not found. Please download it from {} and move all '
+            '*.z files to {}'.format(self.url, self.raw_dir))
+
+    def len(self):
+        return len(self.stsCP_vertices_x)
 
     @property
     def raw_file_names(self):
-        # All ROOT files in raw_dir
-        return sorted(glob.glob(osp.join(self.raw_dir, "*.root")))
+        raw_files = sorted(glob.glob(osp.join(self.raw_dir, '*.root')))
+        
+        #raw_files = [osp.join(self.raw_dir, 'step3_NTUPLE.root')]
+
+        return raw_files
 
     @property
     def processed_file_names(self):
-        # We don’t use the processed/ mechanism; everything is in memory
         return []
 
-    def download(self):
-        raise RuntimeError(
-            "Dataset not found. Please download it from {} and move all "
-            "*.root files to {}".format(self.url, self.raw_dir)
-        )
-
-    # ------------------------------------------------------------------
-    # Data loading (FAST: collect chunks in lists, concatenate once)
-    # ------------------------------------------------------------------
-    def fill_data(self, max_events: int):
-        print("### Loading data")
-
-        chunks_x, chunks_y, chunks_z = [], [], []
-        chunks_e, chunks_layer, chunks_sid, chunks_purity = [], [], [], []
-
-        total_events = 0
-        stop = False
-
-        for path in tqdm(self.raw_paths):
-            if stop:
-                break
-
-            for array in uproot.iterate(
-                f"{path}:HGCALTBout",  
-                [
-                    "hit_x",
-                    "hit_y",
-                    "hit_z",
-                    "hit_Edep",
-                    "hit_layer",
-                    "hit_showerid",
-                    "hit_purity",
-                ],
-                step_size=self.step_size,
-                remind=False,  # less printing overhead
-            ):
-                chunks_x.append(array["hit_x"])
-                chunks_y.append(array["hit_y"])
-                chunks_z.append(array["hit_z"])
-                chunks_e.append(array["hit_Edep"])
-                chunks_layer.append(array["hit_layer"])
-                chunks_sid.append(array["hit_showerid"])
-                chunks_purity.append(array["hit_purity"])
-
-                # Count how many EVENTS were added in this chunk (outer length)
-                total_events += len(array["hit_x"])
-
-                if total_events >= max_events:
-                    stop = True
-                    break
-
-        if total_events == 0:
-            raise RuntimeError(
-                "No events found. Check your raw_dir, TTree name, or branch names."
-            )
-
-        # One concatenate per branch (fast)
-        hits_x = ak.concatenate(chunks_x)
-        hits_y = ak.concatenate(chunks_y)
-        hits_z = ak.concatenate(chunks_z)
-        hits_e = ak.concatenate(chunks_e)
-        hits_layer = ak.concatenate(chunks_layer)
-        hits_sid = ak.concatenate(chunks_sid)
-        hits_purity = ak.concatenate(chunks_purity)
-        print(f"### Loaded {len(self.hits_x)} events into memory")
-
-    # ------------------------------------------------------------------
-    # PyG Dataset required methods
-    # ------------------------------------------------------------------
-    def len(self):
-        # Number of events is length of outer jagged array
-        return len(self.hits_x)
 
     def get(self, idx):
-        # Pull one event (jagged entry) -> numpy arrays
-        hit_x = np.asarray(self.hits_x[idx])
-        hit_y = np.asarray(self.hits_y[idx])
-        hit_z = np.asarray(self.hits_z[idx])
-        hit_e = np.asarray(self.hits_e[idx])
-        hit_l = np.asarray(self.hits_layer[idx])
-        gids = np.asarray(self.hits_showerid[idx])
-        purity = np.asarray(self.hits_purity[idx])
+        edge_index = torch.empty((2,0), dtype=torch.long)
+ 
+        lc_x = self.stsCP_vertices_x[idx]
+        flat_lc_x = np.expand_dims(np.array(ak.flatten(lc_x)),axis=1)
+        lc_y = self.stsCP_vertices_y[idx]
+        flat_lc_y = np.expand_dims(np.array(ak.flatten(lc_y)),axis=1)
+        lc_z = self.stsCP_vertices_z[idx]
+        flat_lc_z = np.expand_dims(np.array(ak.flatten(lc_z)),axis=1)
+        lc_e = self.stsCP_vertices_energy[idx]
+        flat_lc_e = np.expand_dims(np.array(ak.flatten(lc_e)),axis=1)     
+        lc_layer_id = self.stsCP_vertices_layer_id[idx]
+        flat_lc_layer_id = np.expand_dims(np.array(ak.flatten(lc_layer_id)),axis=1)  
 
-        # Features: x, y, z, Edep, layer
-        feats = np.column_stack((hit_x, hit_y, hit_z, hit_e, hit_l)).astype(np.float32)
 
-        data = Data(
-            x=torch.from_numpy(feats),
-            assoc=torch.from_numpy(gids).long(),
-            purity=torch.from_numpy(purity).float(),
-        )
-        return data
+        lc_indexes = np.asarray(self.stsCP_vertices_indexes[idx])
+        purity = np.asarray(self.stsCP_stsCP_vertices_purity[idx])
+
+
+        flat_lc_feats = np.concatenate((flat_lc_x,flat_lc_y,flat_lc_z,flat_lc_e,\
+                                        flat_lc_layer_id),axis=-1)        
+
+        x = torch.from_numpy(flat_lc_feats).float()
+
+
+        
+        return Data(
+            x = x,
+            assoc = torch.from_numpy(lc_indexes).long(),
+            purity = torch.from_numpy(purity).float(),
+            )
+
