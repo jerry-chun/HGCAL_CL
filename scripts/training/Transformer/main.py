@@ -16,26 +16,26 @@ from torch.cuda.amp import autocast, GradScaler
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/Independent/Data/Electron_2/train/"
-vpath = "/vols/cms/mm1221/Independent/Data/Electron_2/val/"
+ipath = "/vols/cms/mm1221/Independent/Data/EM_2_20/train/"
+vpath = "/vols/cms/mm1221/Independent/Data/EM_2_20/val/"
 
 data_train = CCV1(root=ipath, split="train", step_size=1000, max_events=700000)
 data_val   = CCV1(root=vpath,   split="val",   step_size=1000, max_events=200000)
 
 model = Net(
     hidden_dim=64,
-    num_layers=5,
-    dropout=0.0038,
-    contrastive_dim=64,
-    k=32,
-    num_heads=8,
+    num_layers=3,
+    dropout=0.01,
+    contrastive_dim=16,
+    k=24,
+    num_heads=4,
     edge_hidden_dim=16,
     edge_out_dim=16,
 ).to(device)
 
-BS = 64
+BS = 32
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.00035)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.5)
 
 train_loader = DataLoader(
@@ -59,7 +59,7 @@ val_loader = DataLoader(
 )
 
 # New output directory name to reflect hits & cubesim
-output_dir = '/vols/cms/mm1221/Independent/Transformer/runs/Electron_FULL_hd64_nl5_k32_dp0038_nh8_ehd16_eod16/'
+output_dir = '/vols/cms/mm1221/Independent/Transformer/runs/EM_2_10/'
 os.makedirs(output_dir, exist_ok=True)
 
 best_val_loss = float('inf')

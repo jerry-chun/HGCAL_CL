@@ -1,57 +1,22 @@
 #!/usr/bin/env python3
 # data.py
 
-import os
 import os.path as osp
 import glob
 
 import numpy as np
 import awkward as ak
 import uproot
-import h5py  # kept if you use it elsewhere
 
 import torch
 from torch_geometric.data import Data, Dataset
 from tqdm import tqdm
 
-
-def _sample_pos_neg_numpy(groups, rng):
-    """
-    Utility for contrastive sampling (unused by default, but kept here
-    in case you want to re-enable x_pe/x_ne).
-    """
-    N = len(groups)
-    x_pe = np.arange(N, dtype=np.int64)
-    x_ne = np.arange(N, dtype=np.int64)
-
-    uniq = np.unique(groups)
-    idxs_all = np.arange(N)
-    by_g = {g: np.flatnonzero(groups == g) for g in uniq}
-
-    # Positive pairs: same group, different index
-    for _, idxs in by_g.items():
-        m = len(idxs)
-        if m > 1:
-            r = rng.integers(0, m - 1, size=m)
-            pos = np.arange(m)
-            r = r + (r >= pos)
-            x_pe[idxs] = idxs[r]
-
-    # Negative pairs: different groups
-    for _, idxs in by_g.items():
-        comp = np.setdiff1d(idxs_all, idxs, assume_unique=True)
-        if len(comp) > 0:
-            partners = rng.choice(comp, size=len(idxs), replace=True)
-            x_ne[idxs] = partners
-
-    return x_pe, x_ne
-
-
 class CCV1(Dataset):
     """
     Contrastive Clustering V1 dataset.
 
-    Expects ROOT files in `root/raw/` with a TTree (default name "LC")
+    Expects ROOT files in `root/raw/` with a TTree (default name "HGCALTBout")
     containing per-event jagged arrays with branches:
 
       - hit_x
@@ -60,11 +25,13 @@ class CCV1(Dataset):
       - hit_Edep
       - hit_layer
       - hit_showerid
+      - hit_purity
 
     Each event i becomes a torch_geometric Data object with:
 
-      - x: [N_i, 5]  (x, y, z, Edep, layer)
-      - assoc: [N_i] (shower id per hit)
+      - x:      [N_i, 5]  (x, y, z, Edep, layer)
+      - assoc:  [N_i]     (shower id per hit)
+      - purity: [N_i]
     """
 
     url = "/dummy/"
@@ -73,18 +40,18 @@ class CCV1(Dataset):
         self,
         root,
         split="train",
-        step_size=10,
-        max_events=1e8,
+        step_size=200,     # bumped up by default: fewer chunks = faster
+        max_events=int(1e8),
         transform=None,
     ):
         super().__init__(root, transform)
         self.split = split
-        self.step_size = step_size
-        self.max_events = max_events
+        self.step_size = int(step_size)
+        self.max_events = int(max_events)
         self._epoch = 0
 
-        # Load everything into memory once
-        self.fill_data(max_events)
+        # Load everything into memory once (but efficiently)
+        self.fill_data(self.max_events)
 
     def set_epoch(self, epoch: int):
         self._epoch = epoch
@@ -92,10 +59,7 @@ class CCV1(Dataset):
     @property
     def raw_file_names(self):
         # All ROOT files in raw_dir
-        raw_files = sorted(glob.glob(osp.join(self.raw_dir, "*.root")))
-        # Or, if you want a single file:
-        # raw_files = [osp.join(self.raw_dir, "step3_NTUPLE.root")]
-        return raw_files
+        return sorted(glob.glob(osp.join(self.raw_dir, "*.root")))
 
     @property
     def processed_file_names(self):
@@ -109,17 +73,23 @@ class CCV1(Dataset):
         )
 
     # ------------------------------------------------------------------
-    # Data loading
+    # Data loading (FAST: collect chunks in lists, concatenate once)
     # ------------------------------------------------------------------
-    def fill_data(self, max_events):
-        counter = 0
-
+    def fill_data(self, max_events: int):
         print("### Loading data")
-        for fi, path in enumerate(tqdm(self.raw_paths)):
-            # NOTE: change "LC" to your actual TTree name if different.
-            # e.g. f"{path}:HGCALTBout;1"
+
+        chunks_x, chunks_y, chunks_z = [], [], []
+        chunks_e, chunks_layer, chunks_sid, chunks_purity = [], [], [], []
+
+        total_events = 0
+        stop = False
+
+        for path in tqdm(self.raw_paths):
+            if stop:
+                break
+
             for array in uproot.iterate(
-                f"{path}:{'HGCALTBout'}",
+                f"{path}:HGCALTBout",  
                 [
                     "hit_x",
                     "hit_y",
@@ -127,85 +97,64 @@ class CCV1(Dataset):
                     "hit_Edep",
                     "hit_layer",
                     "hit_showerid",
+                    "hit_purity",
                 ],
                 step_size=self.step_size,
+                remind=False,  # less printing overhead
             ):
-                tmp_hits_x = array["hit_x"]
-                tmp_hits_y = array["hit_y"]
-                tmp_hits_z = array["hit_z"]
-                tmp_hits_e = array["hit_Edep"]
-                tmp_hits_layer = array["hit_layer"]
-                tmp_hits_showerid = array["hit_showerid"]
-                                
-                mask = tmp_hits_e > 0.001
-                tmp_hits_x = tmp_hits_x[mask]
-                tmp_hits_y = tmp_hits_y[mask]
-                tmp_hits_z = tmp_hits_z[mask]
-                tmp_hits_e = tmp_hits_e[mask]
-                tmp_hits_layer = tmp_hits_layer[mask]
-                tmp_hits_showerid = tmp_hits_showerid[mask]
-                
-                
-                # Make sure step_size is never larger than the chunk
-                self.step_size = min(self.step_size, len(tmp_hits_x))
+                chunks_x.append(array["hit_x"])
+                chunks_y.append(array["hit_y"])
+                chunks_z.append(array["hit_z"])
+                chunks_e.append(array["hit_Edep"])
+                chunks_layer.append(array["hit_layer"])
+                chunks_sid.append(array["hit_showerid"])
+                chunks_purity.append(array["hit_purity"])
 
-                if counter == 0:
-                    # First chunk: initialise
-                    self.hits_x = tmp_hits_x
-                    self.hits_y = tmp_hits_y
-                    self.hits_z = tmp_hits_z
-                    self.hits_e = tmp_hits_e
-                    self.hits_layer = tmp_hits_layer
-                    self.hits_showerid = tmp_hits_showerid
-                else:
-                    # Concatenate subsequent chunks
-                    self.hits_x = ak.concatenate((self.hits_x, tmp_hits_x))
-                    self.hits_y = ak.concatenate((self.hits_y, tmp_hits_y))
-                    self.hits_z = ak.concatenate((self.hits_z, tmp_hits_z))
-                    self.hits_e = ak.concatenate((self.hits_e, tmp_hits_e))
-                    self.hits_layer = ak.concatenate(
-                        (self.hits_layer, tmp_hits_layer)
-                    )
-                    self.hits_showerid = ak.concatenate(
-                        (self.hits_showerid, tmp_hits_showerid)
-                    )
+                # Count how many EVENTS were added in this chunk (outer length)
+                total_events += len(array["hit_x"])
 
-                counter += 1
-                if len(self.hits_x) > max_events:
-                    print(f"Reached {max_events} events!")
+                if total_events >= max_events:
+                    stop = True
                     break
 
-            if len(self.hits_x) > max_events:
-                break
+        if total_events == 0:
+            raise RuntimeError(
+                "No events found. Check your raw_dir, TTree name, or branch names."
+            )
+
+        # One concatenate per branch (fast)
+        hits_x = ak.concatenate(chunks_x)
+        hits_y = ak.concatenate(chunks_y)
+        hits_z = ak.concatenate(chunks_z)
+        hits_e = ak.concatenate(chunks_e)
+        hits_layer = ak.concatenate(chunks_layer)
+        hits_sid = ak.concatenate(chunks_sid)
+        hits_purity = ak.concatenate(chunks_purity)
+        print(f"### Loaded {len(self.hits_x)} events into memory")
 
     # ------------------------------------------------------------------
     # PyG Dataset required methods
     # ------------------------------------------------------------------
     def len(self):
-        # Number of events is length of the outer jagged array
+        # Number of events is length of outer jagged array
         return len(self.hits_x)
 
     def get(self, idx):
-        hit_x = np.array(self.hits_x[idx])
-        hit_y = np.array(self.hits_y[idx])
-        hit_z = np.array(self.hits_z[idx])
-        hit_e = np.array(self.hits_e[idx])
-        hit_l = np.array(self.hits_layer[idx])
-        gids = np.array(self.hits_showerid[idx])
+        # Pull one event (jagged entry) -> numpy arrays
+        hit_x = np.asarray(self.hits_x[idx])
+        hit_y = np.asarray(self.hits_y[idx])
+        hit_z = np.asarray(self.hits_z[idx])
+        hit_e = np.asarray(self.hits_e[idx])
+        hit_l = np.asarray(self.hits_layer[idx])
+        gids = np.asarray(self.hits_showerid[idx])
+        purity = np.asarray(self.hits_purity[idx])
 
         # Features: x, y, z, Edep, layer
         feats = np.column_stack((hit_x, hit_y, hit_z, hit_e, hit_l)).astype(np.float32)
-        x = torch.from_numpy(feats)
-
-      
-        # rng = np.random.default_rng(seed=(self._epoch * 1_000_003 + idx))
-        # x_pe, x_ne = _sample_pos_neg_numpy(gids, rng)
 
         data = Data(
-            x=x,
-            assoc=torch.from_numpy(gids),
-            # x_pe=torch.from_numpy(x_pe),
-            # x_ne=torch.from_numpy(x_ne),
+            x=torch.from_numpy(feats),
+            assoc=torch.from_numpy(gids).long(),
+            purity=torch.from_numpy(purity).float(),
         )
-
         return data
