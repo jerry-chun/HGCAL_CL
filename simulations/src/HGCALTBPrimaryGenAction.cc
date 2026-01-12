@@ -141,7 +141,11 @@ void HGCALTBPrimaryGenAction::GeneratePrimaries(G4Event* event)
         }
 
         // energy
-        G4double E = G4RandFlat::shoot(fEnergyMin, fEnergyMax);
+        G4double log10E = G4RandFlat::shoot(
+            std::log10(fEnergyMin),
+            std::log10(fEnergyMax)
+        );
+        G4double E = std::pow(10., log10E);
 
         G4double theta = 0.0;
         G4double phi   = 0.0;

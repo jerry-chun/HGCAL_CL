@@ -94,7 +94,7 @@ void HGCALTBEventAction::EndOfEventAction(const G4Event* event)
   for (G4int i = 0; i < CEEHC->GetSize(); ++i) {
     auto hit = (*CEEHC)[i];
     G4double edep_MeV = hit->GetEdep() / CLHEP::MeV;
-    if (edep_MeV > 0.01) {
+    if (edep_MeV > 0.001) {
       hits_x.push_back(hit->GetX());
       hits_y.push_back(hit->GetY());
       hits_z.push_back(hit->GetZ());
@@ -112,7 +112,7 @@ void HGCALTBEventAction::EndOfEventAction(const G4Event* event)
     for (G4int i = 0; i < CHEHC->GetSize(); ++i) {
       auto hit = (*CHEHC)[i];
       G4double edep_MeV = hit->GetEdep() / CLHEP::MeV;
-      if (edep_MeV > 0.01) {
+      if (edep_MeV > 0.001) {
         hits_x.push_back(hit->GetX());
         hits_y.push_back(hit->GetY());
         hits_z.push_back(hit->GetZ());

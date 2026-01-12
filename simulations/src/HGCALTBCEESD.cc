@@ -135,15 +135,14 @@ G4bool HGCALTBCEESD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4int trackID  = track->GetTrackID();
   G4int showerID = gTrackToPrimaryMap[trackID];
 
-  // --- Layer from the step position (same logic as your original code) ---
   double z_step_cm = pre->GetPosition().z() / CLHEP::cm;
   G4int layer = ZtoLayer(z_step_cm);
   if (layer <= 0) {
-    // Outside known layer ranges; drop or debug-print if needed
+    // Outside known layer ranges
     return false;
   }
 
-  // --- True cell center from geometry ---
+  //True cell center from geometry
   const auto touchable = pre->GetTouchableHandle();
 
   // Global center of this physical volume (cell)
@@ -158,7 +157,6 @@ G4bool HGCALTBCEESD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   int ix = static_cast<int>(std::lround(cx_cm));
   int iy = static_cast<int>(std::lround(cy_cm));
 
-  // --- Accumulate in the per-cell map ---
   CEECellKey key{layer, ix, iy};
   auto& acc = fCellMap[key];  // creates if not present
 
@@ -189,7 +187,6 @@ G4bool HGCALTBCEESD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
     acc.showerContribs.emplace_back(showerID, edep);
   }
 
-  // We do NOT create a hit here anymore; we just accumulate.
   return true;
 }
 
@@ -205,17 +202,17 @@ void HGCALTBCEESD::EndOfEvent(G4HCofThisEvent*)
 
     if (acc.edep <= 0.0 || !acc.hasCenter) continue;
 
-    sumCellsEdep += acc.edep;  // DEBUG: sum of merged cell energies
+    sumCellsEdep += acc.edep;  
 
     auto hit = new HGCALTBCEEHit();
 
-    // True cell center from geometry (already in cm)
+    // True cell center from geometry 
     hit->SetPosition(acc.cx, acc.cy, acc.cz);
     hit->SetEdep(acc.edep);
     hit->SetTrackID(acc.firstTrackID);
     hit->SetLayer(key.layer);
 
-    // Choose the shower that contributed the most energy to this cell
+    // Choose the shower that contributed the most energy
     int    dominantShowerID = -1;
     double maxE             = 0.0;
     for (const auto& sh : acc.showerContribs) {
@@ -227,7 +224,7 @@ void HGCALTBCEESD::EndOfEvent(G4HCofThisEvent*)
     double purity = 0.0;
     if (acc.edep > 0.0 && maxE > 0.0) {
       purity = maxE / acc.edep;
-      if (purity > 1.0) purity = 1.0; // just in case of rounding
+      if (purity > 1.0) purity = 1.0; 
     }
     hit->SetShowerID(dominantShowerID);
     hit->SetPurity(purity);
@@ -235,7 +232,6 @@ void HGCALTBCEESD::EndOfEvent(G4HCofThisEvent*)
     fHitsCollection->insert(hit);
   }
 
-  // DEBUG: also sum directly from the hits collection
   double sumHitsEdep = 0.0;
   for (G4int i = 0; i < fHitsCollection->entries(); ++i) {
     sumHitsEdep += (*fHitsCollection)[i]->GetEdep();
@@ -246,14 +242,6 @@ void HGCALTBCEESD::EndOfEvent(G4HCofThisEvent*)
          << " hits (one per cell per layer, at true cell centers)"
          << G4endl;
 
-  G4cout << "  [CEE SD DEBUG] stepSum="
-         << fStepEdepSum / CLHEP::MeV << " MeV, "
-         << "cellSum="
-         << sumCellsEdep / CLHEP::MeV << " MeV, "
-         << "hitSum="
-         << sumHitsEdep / CLHEP::MeV << " MeV"
-         << G4endl;
 
-  // Clear accumulator to be safe (also done in Initialize())
   fCellMap.clear();
 }
