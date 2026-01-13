@@ -11,7 +11,6 @@ request_memory = 32000
 requirements = (AssignedGPUs == "GPU-f49fbfc7" || AssignedGPUs == "GPU-31edab1d")
 
 
-priority = 10000000000000
 
 
 queue 

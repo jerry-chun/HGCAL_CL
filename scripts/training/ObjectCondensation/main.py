@@ -14,22 +14,19 @@ from src.train import train_oc, test_oc
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/Independent/Data/EM_2_20/train/"
-vpath = "/vols/cms/mm1221/Independent/Data/EM_2_20/val/"
+ipath = "/vols/cms/mm1221/geant4sim/simulations/build/train_single/"
+vpath = "/vols/cms/mm1221/geant4sim/simulations/build/validation_single/"
 
-data_train = CCV1(root=ipath, split="train", step_size=1000, max_events=7000000)
-data_val   = CCV1(root=vpath,   split="val",   step_size=1000, max_events=200000)
+data_train = CCV1(root=ipath, inp="train", max_events=350000)
+data_val   = CCV1(root=vpath,   inp="val", max_events=200000)
 
-BS = 32
+BS = 16
 
 train_loader = DataLoader(
     data_train,
     batch_size=BS,
     shuffle=True,
     follow_batch=["x"],
-    num_workers=4,
-    pin_memory=True,
-    persistent_workers=True,
 )
 
 val_loader = DataLoader(
@@ -37,9 +34,6 @@ val_loader = DataLoader(
     batch_size=BS,
     shuffle=False,
     follow_batch=["x"],
-    num_workers=4,
-    pin_memory=True,
-    persistent_workers=True,
 )
 
 model = Net(
@@ -47,17 +41,13 @@ model = Net(
     num_layers=3,
     dropout=0.01,
     k=24,
-    num_heads=4,
-    edge_hidden_dim=16,
-    edge_out_dim=16,
-    cluster_dim=2,   
-    prop_dim=0,
+    coord_dim = 3,
 ).to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=150, gamma=0.5)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
 
-output_dir = "/vols/cms/mm1221/Independent/ObjectCondensation/runs/EM_2_10/"
+output_dir = "/vols/cms/mm1221/geant4sim/scripts/ObjectCondensation/runs/EM_2_10/"
 os.makedirs(output_dir, exist_ok=True)
 
 best_val_loss = float("inf")
@@ -83,23 +73,11 @@ for epoch in range(epochs):
         optimizer,
         device,
         scaler,
-        q_min=0.1,
-        noise_label=-1,       
-        s_att=1.0,
-        s_rep=1.0,         
-        s_coward=1.0, 
-        s_noise=1.0,
     )
     val_loss = test_oc(
         val_loader,
         model,
         device,
-        q_min=0.1,
-        noise_label=-1,
-        s_att=1.0,
-        s_rep=1.0,
-        s_coward=1.0,
-        s_noise=1.0,
     )
 
     scheduler.step()
