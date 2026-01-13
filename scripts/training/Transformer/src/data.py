@@ -120,24 +120,18 @@ class CCV1(Dataset):
     def get(self, idx):
         edge_index = torch.empty((2,0), dtype=torch.long)
  
-        lc_x = self.stsCP_vertices_x[idx]
-        flat_lc_x = np.expand_dims(np.array(ak.flatten(lc_x)),axis=1)
-        lc_y = self.stsCP_vertices_y[idx]
-        flat_lc_y = np.expand_dims(np.array(ak.flatten(lc_y)),axis=1)
-        lc_z = self.stsCP_vertices_z[idx]
-        flat_lc_z = np.expand_dims(np.array(ak.flatten(lc_z)),axis=1)
-        lc_e = self.stsCP_vertices_energy[idx]
-        flat_lc_e = np.expand_dims(np.array(ak.flatten(lc_e)),axis=1)     
-        lc_layer_id = self.stsCP_vertices_layer_id[idx]
-        flat_lc_layer_id = np.expand_dims(np.array(ak.flatten(lc_layer_id)),axis=1)  
+        lc_x = np.expand_dims(np.asarray(self.stsCP_vertices_x[idx]), axis = 1)
+        lc_y = np.expand_dims(np.asarray(self.stsCP_vertices_y[idx]), axis = 1)
+        lc_z = np.expand_dims(np.asarray(self.stsCP_vertices_z[idx]), axis = 1)
+        lc_e = np.expand_dims(np.asarray(self.stsCP_vertices_energy[idx]), axis = 1)
+        lc_layer_id = np.expand_dims(np.asarray(self.stsCP_vertices_layer_id[idx]), axis = 1)
 
 
         lc_indexes = np.asarray(self.stsCP_vertices_indexes[idx])
         purity = np.asarray(self.stsCP_stsCP_vertices_purity[idx])
 
 
-        flat_lc_feats = np.concatenate((flat_lc_x,flat_lc_y,flat_lc_z,flat_lc_e,\
-                                        flat_lc_layer_id),axis=-1)        
+        flat_lc_feats = np.concatenate((lc_x, lc_y, lc_z, lc_e, lc_layer_id),axis=-1)        
 
         x = torch.from_numpy(flat_lc_feats).float()
 

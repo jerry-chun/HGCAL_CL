@@ -15,28 +15,22 @@ import torch.nn.functional as F
 
 from torch_geometric.nn import TransformerConv
 from torch_geometric.nn.pool import knn_graph
-
+from torch.cuda.amp import autocast, GradScaler
 import torch
 import torch.nn as nn
 import math
 
 
-def contrastive_loss_curriculum_both(embeddings, group_ids, temperature=0.1, alpha=0.0):
+def contrastive_loss(embeddings, group_ids, temperature=0.1):
     """
     Computes an NT-Xent style loss that blends both positive and negative mining, using group_ids only.
 
     For each anchor i:
       - Provided positive similarity: pos_sim_orig = sim(embeddings[i], embeddings[j]),
           where j is a randomly chosen index (≠ i) such that group_ids[j] == group_ids[i].
-      - Hard positive similarity: [omitted in this simplified version]
-      - Blended positive similarity: [omitted in this simplified version; we just use pos_sim_orig]
-
       - Random negative similarity: rand_neg_sim = sim(embeddings[i], embeddings[k]),
           where k is a randomly chosen index such that group_ids[k] != group_ids[i].
-      - Hard negative similarity: max { sim(embeddings[i], embeddings[k]) : 
                                        group_ids[k] != group_ids[i] }
-      - Blended negative similarity: (1 - alpha) * rand_neg_sim + alpha * hard_neg_sim
-
     The loss per anchor is:
          loss_i = - log( exp(pos_sim_orig / temperature) / 
                          ( exp(pos_sim_orig / temperature) + exp(blended_neg / temperature) ) )
@@ -47,7 +41,6 @@ def contrastive_loss_curriculum_both(embeddings, group_ids, temperature=0.1, alp
         embeddings: Tensor of shape (N, D) (raw outputs; they will be normalized inside).
         group_ids: 1D Tensor (length N) of group identifiers.
         temperature: Temperature scaling factor.
-        alpha: Blending parameter between random and hard negative mining.
 
     Returns:
         Scalar loss (mean over anchors).
@@ -72,9 +65,6 @@ def contrastive_loss_curriculum_both(embeddings, group_ids, temperature=0.1, alp
     rand_pos_sim = sim_matrix[idx, rand_pos_indices]
     pos_sim_orig = torch.where(no_valid_pos, sim_matrix[idx, idx], rand_pos_sim)
 
-    # Maybe Hard Positive? Future
-    blended_pos = pos_sim_orig
-
     # --- Negatives ---
     # Build a mask for negatives
     neg_mask = (group_ids.unsqueeze(1) != group_ids.unsqueeze(0))
@@ -87,118 +77,83 @@ def contrastive_loss_curriculum_both(embeddings, group_ids, temperature=0.1, alp
     rand_neg_indices = torch.argmax(rand_vals_neg, dim=1)
     rand_neg_sim = sim_matrix[idx, rand_neg_indices]
 
-    # Hard negative similarity
-    sim_matrix_neg = sim_matrix.masked_fill(~neg_mask, -float('inf'))
-    hard_neg_sim, _ = sim_matrix_neg.max(dim=1)
-    hard_neg_sim = torch.where(no_valid_neg, torch.tensor(-1.0, device=embeddings.device), hard_neg_sim)
-
-    blended_neg = (1 - alpha) * rand_neg_sim + alpha * hard_neg_sim
-
     # Loss
-    numerator = torch.exp(blended_pos / temperature)
-    denominator = numerator + torch.exp(blended_neg / temperature)
+    numerator = torch.exp(pos_sim_orig / temperature)
+    denominator = numerator + torch.exp(rand_neg_sim / temperature)
     loss = -torch.log(numerator / denominator)
     loss = loss.masked_fill(no_valid_neg, 0.0)
 
     return loss.mean()
-
-
-
-
-def contrastive_loss_curriculum(embeddings, group_ids, temperature=0.1):
-    """
-    Curriculum loss that uses both positive and negative blending based solely on group_ids.
-    
-    Args:
-        embeddings: Tensor of shape (N, D).
-        group_ids: 1D Tensor (length N).
-        temperature: Temperature scaling factor.
-        alpha: Blending parameter.
-        
-    Returns:
-        Scalar loss.
-    """
-    return contrastive_loss_curriculum_both(embeddings, group_ids, temperature)
-
-
 
 #################################
 # Training and Testing Functions
 #################################
 
 
-def train_new(train_loader, model, optimizer, device):
+def train_new(train_loader, model, optimizer, device, scaler):
     model.train()
-    total_loss = torch.zeros(1, device=device)
-    for data in tqdm(train_loader, desc="Training"):
-        data = data.to(device)
-        optimizer.zero_grad()
-        
-        # Convert data.assoc to tensor if needed.
-        if isinstance(data.assoc, list):
-            if isinstance(data.assoc[0], list):
-                assoc_tensor = torch.cat([torch.tensor(a, dtype=torch.int64, device=data.x.device)
-                                          for a in data.assoc])
-            else:
-                assoc_tensor = torch.tensor(data.assoc, device=data.x.device)
-        else:
-            assoc_tensor = data.assoc
+    total_loss = 0.0
 
-        embeddings, _ = model(data.x, data.x_batch)
-        
-        # Partition batch by event.
-        batch_np = data.x_batch.detach().cpu().numpy()
-        _, counts = np.unique(batch_np, return_counts=True)
-        
-        loss_event_total = torch.zeros(1, device=device)
-        start_idx = 0
-        for count in counts:
-            end_idx = start_idx + count
-            event_embeddings = embeddings[start_idx:end_idx]
-            event_group_ids = assoc_tensor[start_idx:end_idx]
-            loss_event = contrastive_loss_curriculum(event_embeddings,
-                                                     event_group_ids, temperature=0.1)
-            loss_event_total += loss_event
-            start_idx = end_idx
-        
-        loss = loss_event_total / len(counts)
-        loss.backward()
-        total_loss += loss
-        optimizer.step()
-    return total_loss / len(train_loader) #This needs to be checked, think should be train_loader
+    for data in tqdm(train_loader, desc="Training"):
+        data = data.to(device, non_blocking=True)
+        optimizer.zero_grad(set_to_none=True)
+
+        # Make assoc_tensor (best: have dataset return it as a tensor already)
+        assoc_tensor = data.assoc
+
+        with autocast():
+            embeddings, _ = model(data.x, data.x_batch)
+
+            # GPU counts (no cpu/numpy)
+            counts = torch.bincount(data.x_batch)
+            counts = counts[counts > 0]
+
+            splits = torch.split(embeddings, counts.tolist())
+            group_splits = torch.split(assoc_tensor, counts.tolist())
+
+            loss = torch.stack([
+                contrastive_loss(e, g, temperature=0.1)
+                for e, g in zip(splits, group_splits)
+            ]).mean()
+
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
+
+        total_loss += float(loss.detach())
+
+    return total_loss / len(train_loader)
 
 @torch.no_grad()
 def test_new(test_loader, model, device):
     model.eval()
-    total_loss = torch.zeros(1, device=device)
+    total_loss = 0.0
+
     for data in tqdm(test_loader, desc="Validation"):
-        data = data.to(device)
-        
-        if isinstance(data.assoc, list):
-            if isinstance(data.assoc[0], list):
-                assoc_tensor = torch.cat([torch.tensor(a, dtype=torch.int64, device=data.x.device)
-                                          for a in data.assoc])
-            else:
-                assoc_tensor = torch.tensor(data.assoc, device=data.x.device)
-        else:
-            assoc_tensor = data.assoc
-        
-        #edge_index = knn_graph(data.x[:, :3], k=k_value, batch=data.x_batch)
-        #edge_index = build_knn_edge_index(data.x[:, :3], data.x_batch, k_value)
-        embeddings, _ = model(data.x, data.x_batch)
-        
-        batch_np = data.x_batch.detach().cpu().numpy()
-        _, counts = np.unique(batch_np, return_counts=True)
-        
-        loss_event_total = torch.zeros(1, device=device)
-        start_idx = 0
-        for count in counts:
-            end_idx = start_idx + count
-            event_embeddings = embeddings[start_idx:end_idx]
-            event_group_ids = assoc_tensor[start_idx:end_idx]
-            loss_event = contrastive_loss_curriculum(event_embeddings,
-                                                     event_group_ids, temperature=0.1)
-            loss_event_total += loss_event
-            start_idx = end_idx
-        total_loss += loss_event_total / len(counts)
+        data = data.to(device, non_blocking=True)
+
+        # Make assoc_tensor a Long tensor on GPU
+        assoc_tensor = data.assoc
+        with autocast():
+            embeddings, _ = model(data.x, data.x_batch)
+
+            # Count nodes per event on GPU (no cpu/numpy)
+            counts = torch.bincount(data.x_batch)
+            counts = counts[counts > 0]
+
+            # Split per-event
+            splits = torch.split(embeddings, counts.tolist())
+            group_splits = torch.split(assoc_tensor, counts.tolist())
+
+            # Per-event contrastive loss, averaged over events
+            loss = torch.stack([
+                contrastive_loss(e, g, temperature=0.1)
+                for e, g in zip(splits, group_splits)
+            ]).mean()
+
+        total_loss += float(loss.detach())
+
     return total_loss / len(test_loader)
+
+
+

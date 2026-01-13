@@ -12,29 +12,41 @@ import csv
 from torch.cuda.amp import autocast, GradScaler
 
 
+torch.set_float32_matmul_precision("high")
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
+
+import warnings
+warnings.filterwarnings(
+    "ignore",
+    message="TypedStorage is deprecated"
+)
+
+
 # Set device.
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/geant4sim/simulations/build/output/"
-vpath = "/vols/cms/mm1221/geant4sim/simulations/build/output/"
+ipath = "/vols/cms/mm1221/geant4sim/simulations/build/train_single/"
+vpath = "/vols/cms/mm1221/geant4sim/simulations/build/validation_single/"
 
-data_train = CCV1(root=ipath, inp="train", max_events=200)
-data_val   = CCV1(root=vpath,   inp="val",, max_events=200)
+data_train = CCV1(root=ipath, inp="train", max_events=350000)
+data_val   = CCV1(root=vpath,   inp="val", max_events=150000)
 
 model = Net(
-    hidden_dim=128,
+    hidden_dim=64,
     num_layers=3,
     dropout=0.01,
     contrastive_dim=16,
-    k=48,
+    k=24,
 ).to(device)
 
-BS = 32
+BS = 16
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
-
+scaler = GradScaler() 
 train_loader = DataLoader(
     data_train,
     batch_size=BS,
@@ -67,13 +79,12 @@ if not os.path.exists(csv_path):
 print("Starting full training with curriculum for hard negative mining...")
 epochs = 100
 
-scaler = GradScaler()
 for epoch in range(epochs):
 
 
     print(f"Epoch {epoch+1}/{epochs}")
 
-    train_loss = train_new(train_loader, model, optimizer, device)
+    train_loss = train_new(train_loader, model, optimizer, device, scaler)
     val_loss   = test_new(val_loader,  model, device)
 
     scheduler.step()
@@ -94,9 +105,9 @@ for epoch in range(epochs):
 
     with open(csv_path, 'a', newline='') as f:
         w = csv.writer(f)
-        w.writerow([epoch + 1, float(train_loss.item()), float(val_loss.item())])
+        w.writerow([epoch + 1, float(train_loss), float(val_loss)])
 
-    print(f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss.item():.8f}, Validation Loss: {val_loss.item():.8f}")
+    print(f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.8f}, Validation Loss: {val_loss:.8f}")
     print(f"Appended epoch {epoch+1} to {csv_path}")
 
     if no_improvement_epochs >= patience:
