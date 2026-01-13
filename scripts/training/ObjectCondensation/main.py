@@ -47,7 +47,7 @@ model = Net(
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
 
-output_dir = "/vols/cms/mm1221/geant4sim/scripts/ObjectCondensation/runs/EM_2_10/"
+output_dir = "/vols/cms/mm1221/geant4sim/scripts/training/ObjectCondensation/runs/EM_2_10/"
 os.makedirs(output_dir, exist_ok=True)
 
 best_val_loss = float("inf")
