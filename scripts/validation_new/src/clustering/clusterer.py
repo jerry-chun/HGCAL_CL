@@ -3,35 +3,48 @@
 import time
 import torch
 
-from .agglomerative_clustering import Agglomerative
 from .oc_clustering import oc_cluster_single_event
-
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.neighbors import kneighbors_graph
 
 def _cluster_contrastive(config, model, data_loader, device):
-    all_predictions = []
+    reconstruction_labels = []
     start_time = time.time()
 
     for i, data in enumerate(data_loader):
         data = data.to(device)
 
-        preds = model(data.x, data.x_batch)
+        out = model(data.x, data.x_batch)
+        preds = out[0]
+        xyz = data.x[:, :3].detach().cpu().numpy()
 
-        all_predictions.append(preds[0].detach().cpu().numpy())
-
-        if i > config["max_events"] - 1:
-            break
-
-    if config["algorithm"] == "agglomerative":
-        reconstruction_labels = Agglomerative(
-            all_predictions,
-            threshold=config["distance_threshold"],
-            metric=config["metric"],
-            linkage=config["linkage"],
+        k = 30
+        connectivity = kneighbors_graph(
+            xyz,
+            n_neighbors=k,
+            mode="connectivity",
+            include_self=False,
+            n_jobs=-1,
         )
-    else:
-        raise ValueError(
-            f"Clustering algorithm {config['algorithm']} not recognized for contrastive task."
+
+        agglomerative = AgglomerativeClustering(
+            n_clusters=None,
+            distance_threshold=24,
+            linkage="ward",         
+            metric="euclidean",
+            connectivity=connectivity,
+            compute_distances=True,
         )
+
+        preds_np = preds.detach().cpu().numpy()
+        cluster_labels = agglomerative.fit_predict(preds_np)
+
+        reconstruction_labels.append(cluster_labels)
+
+
+
+
+
 
     end_time = time.time()
     time_diff = end_time - start_time
@@ -56,7 +69,7 @@ def _cluster_oc(config, model, data_loader, device):
         for i, data in enumerate(data_loader):
             data = data.to(device)
 
-            cluster_coords, beta, prop_pred, batch = model(data.x, data.x_batch)
+            beta, cluster_coords, batch = model(data.x, data.x_batch)
 
             # batch may contain multiple events (if batch_size>1)
             num_events = int(batch.max().item() + 1)

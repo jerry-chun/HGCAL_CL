@@ -12,6 +12,7 @@ def build_dataframe(reconstructed_label, loader):
         if i >= num_reco:
             break
         CP_ids = data.assoc
+        PrimaryEnergies = data.PrimaryEnergies
         reco_ids = reconstructed_label[i]
 
         hit_energy = np.array(data.x[:,3])
@@ -20,10 +21,12 @@ def build_dataframe(reconstructed_label, loader):
         unique_reco_ids = np.unique(reco_ids)
 
         for rid in unique_reco_ids:
+            if rid == -1:
+                continue
             rmask = np.array((reco_ids == rid))
             for cid in unique_cp_ids:
                 cmask = np.array((CP_ids == cid))
-                
+                PE = PrimaryEnergies[cid]
                 
                 cp_energy = hit_energy[cmask].sum()
                 reco_energy = hit_energy[rmask].sum()
@@ -36,7 +39,8 @@ def build_dataframe(reconstructed_label, loader):
                     'cp_energy': cp_energy,
                     'reco_energy': reco_energy,
                     'shared_energy': shared_energy,
-                    'RtS': RtS
+                    'RtS': RtS,
+                    'PrimaryEnergy' : PE.item()
                 })
     df = pd.DataFrame(rows).sort_values(['event_id', 'cp_id', 'reco_id']).reset_index(drop=True)
     return df

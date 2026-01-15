@@ -5,7 +5,7 @@ import pandas as pd
 import awkward as ak
 import torch
 import argparse
-
+from pathlib import Path
 from src.data_loader.Data_Loader import Data_Loader
 from src.models.model_loader import model_loader
 from src.clustering.clusterer import clusterer
@@ -22,7 +22,7 @@ def main():
         type=int, default=1000,
         help="Maximum number of events to process"
     )
-
+    ap.add_argument("--out", required=True, help="Output CSV path")
     #task / model type
     ap.add_argument(
         "--task",
@@ -33,35 +33,6 @@ def main():
     )
 
     #shared model hyperparameters
-    ap.add_argument("-model_name", type=str, default="Transformer",
-                    help="Model name to use")
-    ap.add_argument("-hidden_dim", type=int, default=64,
-                    help="Hidden dimension size")
-    ap.add_argument("-num_layers", type=int, default=5,
-                    help="Number of layers in the model")
-    ap.add_argument("-dropout", type=float, default=0.0038,
-                    help="Dropout rate")
-    ap.add_argument("-k", type=int, default=32,
-                    help="Number of neighbors for k-NN")
-    ap.add_argument("-num_heads", type=int, default=8,
-                    help="Number of attention heads")
-    ap.add_argument("-edge_hidden_dim", type=int, default=16,
-                    help="Edge hidden dimension size")
-    ap.add_argument("-edge_out_dim", type=int, default=16,
-                    help="Edge output dimension size")
-    ap.add_argument(
-        "-model_path", "--model_path",
-        required=True,
-        help="Path to the pre-trained model"
-    )
-
-    # contrastive-specific hyperparameters 
-    ap.add_argument(
-        "-contrastive_dim", type=int, default=64,
-        help="Contrastive embedding dimension (contrastive task only)"
-    )
-
-    #clustering for contrastive 
     ap.add_argument(
         "-clustering_algorithm", type=str,
         default="agglomerative",
@@ -119,21 +90,19 @@ def main():
 
     # Model config & load
     model_config = {
-        "task": args.task,
-        "model_name": args.model_name,
-        "hidden_dim": args.hidden_dim,
-        "num_layers": args.num_layers,
-        "dropout": args.dropout,
-        "k": args.k,
-        "num_heads": args.num_heads,
-        "edge_hidden_dim": args.edge_hidden_dim,
-        "edge_out_dim": args.edge_out_dim,
-        "contrastive_dim": args.contrastive_dim
+        "task": "contrastive",
+        "hidden_dim": 64,
+        "num_layers": 3,
+        "dropout": 0.01,
+        "k": 24,
+
+        "contrastive_dim": 16,
+        "coord_dim": 3,
+        "path" : "/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_10/best_model.pt"
     }
 
     model = model_loader(
         config=model_config,
-        model_path=args.model_path,
         device=device,
     )
     print(f"Model loaded successfully (task={args.task}).")
@@ -165,9 +134,8 @@ def main():
     df = build_dataframe(reconstruction_labels, loader)
     print("DataFrame constructed successfully.")
 
-    df.to_csv("output_dataframe.csv", index=False)
-    print("DataFrame saved to output_dataframe.csv")
-
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
     main()
