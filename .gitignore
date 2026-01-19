@@ -1,2 +1,11 @@
 build/
 simulations/build
+*.log
+*.error
+*.output
+*.pt
+*.csv
+*.txt
+*.out
+*.err
+

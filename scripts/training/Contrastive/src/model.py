@@ -28,7 +28,6 @@ class Net(nn.Module):
         self.dropout = dropout
         self.k = k
 
-        # Input encoder (assumes input features of size 8).
         self.lc_encode = nn.Sequential(
             nn.Linear(5, hidden_dim),
             nn.ELU(),
@@ -36,8 +35,6 @@ class Net(nn.Module):
             nn.ELU()
         )
 
-        # Build the MLP (edge function) for each DynamicEdgeConv layer.
-        # For each neighbor pair, we get a feature vector of size 2*hidden_dim.
         def build_mlp():
             return nn.Sequential(
                 nn.Linear(2 * hidden_dim, hidden_dim),
@@ -45,7 +42,6 @@ class Net(nn.Module):
                 nn.Linear(hidden_dim, hidden_dim)
             )
 
-        # Create a stack of DynamicEdgeConv layers.
         self.edgeconv_layers = nn.ModuleList([
             DynamicEdgeConv(
                 nn=build_mlp(),
@@ -55,7 +51,6 @@ class Net(nn.Module):
             for _ in range(num_layers)
         ])
 
-        # Output layer.
         self.output = nn.Sequential(
             nn.Linear(hidden_dim, 64),
             nn.ELU(),
@@ -77,15 +72,12 @@ class Net(nn.Module):
         Returns:
             tuple: (Output features, Batch vector)
         """
-        # Encode input features to hidden_dim.
-        x_enc = self.lc_encode(x)  # (N, hidden_dim)
+        x_enc = self.lc_encode(x)  
 
-        # Pass through each DynamicEdgeConv layer.
         for conv in self.edgeconv_layers:
-            x_enc = conv(x_enc, batch)   # edges are dynamically computed
+            x_enc = conv(x_enc, batch)   
             x_enc = F.elu(x_enc)
             x_enc = F.dropout(x_enc, p=self.dropout, training=self.training)
 
-        # Final output transformation.
         out = self.output(x_enc)
         return out, batch

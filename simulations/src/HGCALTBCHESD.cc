@@ -19,8 +19,6 @@ namespace {
     double z_max;
   };
 
-  // 50 layers, indices 1..50 in the return value.
-  // Values taken from your histogram analysis.
   static const LayerRange kLayerRanges[50] = {
     {319.666, 322.166},
     {322.166, 324.665},
@@ -74,10 +72,9 @@ namespace {
     {496.918, 501.922}
   };
 
-  // Map z (in cm) to layer index 1..50. Returns 0 if outside all ranges.
   inline int ZtoLayer(double z_cm)
   {
-    constexpr double eps = 1e-4; // small tolerance
+    constexpr double eps = 1e-4; 
     for (int i = 0; i < 50; ++i) {
       if (z_cm >= kLayerRanges[i].z_min - eps &&
           z_cm <= kLayerRanges[i].z_max + eps) {
@@ -117,14 +114,12 @@ G4bool HGCALTBCHESD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     G4int trackID  = track->GetTrackID();
     G4int showerID = gTrackToPrimaryMap[trackID];
 
-    // --- layer from step z (same logic as for CEE) ---
     double z_step_cm = pre->GetPosition().z() / CLHEP::cm;
     G4int layer = ZtoLayer(z_step_cm);
     if (layer <= 0) {
         return false;
     }
 
-    // --- true cell center from geometry ---
     const auto touchable = pre->GetTouchableHandle();
     G4ThreeVector globalCenter = touchable->GetTranslation();
 
@@ -132,7 +127,6 @@ G4bool HGCALTBCHESD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     double cy_cm = globalCenter.y() / CLHEP::cm;
     double cz_cm = globalCenter.z() / CLHEP::cm;
 
-    // quantise to 1 cm grid (cell size) to get integer indices
     int ix = static_cast<int>(std::lround(cx_cm));
     int iy = static_cast<int>(std::lround(cy_cm));
 
@@ -182,7 +176,6 @@ void HGCALTBCHESD::EndOfEvent(G4HCofThisEvent*) {
         hit->SetTrackID(acc.firstTrackID);
         hit->SetLayer(key.layer);
 
-        // dominant shower ID
         int    dominantShowerID = -1;
         double maxE             = 0.0;
         for (const auto& sh : acc.showerContribs) {
@@ -200,7 +193,6 @@ void HGCALTBCHESD::EndOfEvent(G4HCofThisEvent*) {
        
         hit->SetShowerID(dominantShowerID);
         hit->SetPurity(purity);
-        // if you later want to set wafer / scint flags, you can add it here
 
         fHitsCollection->insert(hit);
     }

@@ -28,8 +28,8 @@ warnings.filterwarnings(
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/geant4sim/simulations/build/train_single/"
-vpath = "/vols/cms/mm1221/geant4sim/simulations/build/validation_single/"
+ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Train_EM_2_10/"
+vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Val_EM_2_10/"
 
 data_train = CCV1(root=ipath, inp="train", max_events=350000)
 data_val   = CCV1(root=vpath,   inp="val", max_events=150000)

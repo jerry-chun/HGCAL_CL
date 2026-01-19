@@ -18,13 +18,10 @@
 // Helper: sample a direction within a cone of half-angle 'delta' around 'axis'.
 static G4ThreeVector SampleDirectionInCone(const G4ThreeVector& axis, G4double delta)
 {
-    // Ensure unit axis
     G4ThreeVector w = axis.unit();
 
-    // Build an orthonormal basis (u, v, w)
     G4ThreeVector tmp(0., 0., 1.);
     if (std::fabs(w.z()) > 0.999) {
-        // If axis ~ z, choose a different tmp to avoid degeneracy
         tmp = G4ThreeVector(0., 1., 0.);
     }
 
@@ -32,15 +29,12 @@ static G4ThreeVector SampleDirectionInCone(const G4ThreeVector& axis, G4double d
     G4ThreeVector v = w.cross(u);
 
     // Sample polar angle alpha within [0, delta] uniformly in solid angle:
-    // cos(alpha) uniform in [cos(delta), 1]
     G4double cosAlphaMin = std::cos(delta);
     G4double cosAlpha    = G4RandFlat::shoot(cosAlphaMin, 1.0);
     G4double sinAlpha    = std::sqrt(1.0 - cosAlpha * cosAlpha);
 
-    // Sample azimuth beta in [0, 2π)
     G4double beta = G4RandFlat::shoot(0., twopi);
 
-    // Local coordinates: (sinα cosβ, sinα sinβ, cosα)
     G4ThreeVector dir = (std::cos(beta) * sinAlpha) * u +
                         (std::sin(beta) * sinAlpha) * v +
                         cosAlpha * w;
@@ -63,7 +57,6 @@ HGCALTBPrimaryGenAction::HGCALTBPrimaryGenAction()
     fZMax              = -899.0 * cm;
     fParticleTypesStr  = "pi+";
 
-    // New: default cone half-opening angle for subsequent particles
     fDelta             = 1.0 * deg;
 
     // UI commands
@@ -86,7 +79,6 @@ HGCALTBPrimaryGenAction::HGCALTBPrimaryGenAction()
     fMessenger.DeclareProperty("particleTypes", fParticleTypesStr,
                                 "Space-separated list of particle names (e.g. \"mu- mu+\")");
 
-    // New: cone half-angle for subsequent particles
     fMessenger.DeclarePropertyWithUnit("delta", "deg", fDelta,
                                         "Half-opening angle of cone around the first particle direction");
 }
@@ -141,18 +133,14 @@ void HGCALTBPrimaryGenAction::GeneratePrimaries(G4Event* event)
         }
 
         // energy
-        G4double log10E = G4RandFlat::shoot(
-            std::log10(fEnergyMin),
-            std::log10(fEnergyMax)
-        );
-        G4double E = std::pow(10., log10E);
+        G4double E = G4RandFlat::shoot(fEnergyMin, fEnergyMax);
 
         G4double theta = 0.0;
         G4double phi   = 0.0;
         G4ThreeVector dir;
 
         if (i == 0) {
-            // First particle: as before, sample theta in [thetaMin, thetaMax] uniformly in solid angle
+            // First particle: sample theta in [thetaMin, thetaMax] uniformly in solid angle
             G4double cosThetaMin = std::cos(fThetaMin);
             G4double cosThetaMax = std::cos(fThetaMax);
             G4double cosTheta    = G4RandFlat::shoot(cosThetaMax, cosThetaMin);

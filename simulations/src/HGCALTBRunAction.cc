@@ -14,36 +14,35 @@ HGCALTBRunAction::HGCALTBRunAction(HGCALTBEventAction* eventAction, G4String fil
     analysisManager->SetNtupleMerging(1);
 
     analysisManager->CreateNtuple("HGCALTBout", "HGCALTBoutput");
-    analysisManager->CreateNtupleDColumn("edep");            // 0
-    analysisManager->CreateNtupleDColumn("CEETot");          // 1
-    analysisManager->CreateNtupleDColumn("CHETot");          // 2
-    analysisManager->CreateNtupleDColumn("AHCALTot");        // 3
-    analysisManager->CreateNtupleDColumn("HGCALTot");        // 4
-    analysisManager->CreateNtupleIColumn("IntLayer");        // 5
-    analysisManager->CreateNtupleIColumn("PDGID");           // 6 
-    analysisManager->CreateNtupleDColumn("PrimaryEnergy");   // 7 (sum of primaries in MeV)
+    analysisManager->CreateNtupleDColumn("edep");            
+    analysisManager->CreateNtupleDColumn("CEETot");          
+    analysisManager->CreateNtupleDColumn("CHETot");          
+    analysisManager->CreateNtupleDColumn("AHCALTot");        
+    analysisManager->CreateNtupleDColumn("HGCALTot");        
+    analysisManager->CreateNtupleIColumn("IntLayer");        
+    analysisManager->CreateNtupleIColumn("PDGID");           
+    analysisManager->CreateNtupleDColumn("PrimaryEnergy"); 
 
-    analysisManager->CreateNtupleIColumn("CEEIntLayer");     // 8
-    analysisManager->CreateNtupleIColumn("CHEIntLayer");     // 9
+    analysisManager->CreateNtupleIColumn("CEEIntLayer");     
+    analysisManager->CreateNtupleIColumn("CHEIntLayer");    
+    analysisManager->CreateNtupleDColumn("CEESignals", fEventAction->GetCEESignals());   
+    analysisManager->CreateNtupleDColumn("CHESignals", fEventAction->GetCHESignals());   
+    analysisManager->CreateNtupleDColumn("AHCALSignals", fEventAction->GetAHCALSignals());
 
-    analysisManager->CreateNtupleDColumn("CEESignals", fEventAction->GetCEESignals());   // 10
-    analysisManager->CreateNtupleDColumn("CHESignals", fEventAction->GetCHESignals());   // 11
-    analysisManager->CreateNtupleDColumn("AHCALSignals", fEventAction->GetAHCALSignals());// 12
-
-    analysisManager->CreateNtupleDColumn("hit_x",        fEventAction->hits_x);          // 13
-    analysisManager->CreateNtupleDColumn("hit_y",        fEventAction->hits_y);          // 14
-    analysisManager->CreateNtupleDColumn("hit_z",        fEventAction->hits_z);          // 15
-    analysisManager->CreateNtupleDColumn("hit_Edep",     fEventAction->hits_Edep);       // 16
-    analysisManager->CreateNtupleIColumn("hit_trackid",  fEventAction->hit_trackid);     // 17
-    analysisManager->CreateNtupleIColumn("hit_showerid", fEventAction->hit_showerid);    // 18
-    analysisManager->CreateNtupleIColumn("hit_detector", fEventAction->hit_detector);    // 19
-    analysisManager->CreateNtupleIColumn("hit_layer",    fEventAction->hit_layer);       // 20  <-- NEW
-    analysisManager->CreateNtupleDColumn("hit_purity",   fEventAction->hit_purity);      // 21  <-- NEW
+    analysisManager->CreateNtupleDColumn("hit_x",        fEventAction->hits_x);          
+    analysisManager->CreateNtupleDColumn("hit_y",        fEventAction->hits_y);  
+    analysisManager->CreateNtupleDColumn("hit_z",        fEventAction->hits_z);          
+    analysisManager->CreateNtupleDColumn("hit_Edep",     fEventAction->hits_Edep);       
+    analysisManager->CreateNtupleIColumn("hit_trackid",  fEventAction->hit_trackid);     
+    analysisManager->CreateNtupleIColumn("hit_showerid", fEventAction->hit_showerid);    
+    analysisManager->CreateNtupleIColumn("hit_detector", fEventAction->hit_detector);    
+    analysisManager->CreateNtupleIColumn("hit_layer",    fEventAction->hit_layer);       
+    analysisManager->CreateNtupleDColumn("hit_purity",   fEventAction->hit_purity);      
 
 
-    analysisManager->CreateNtupleIColumn("CEEHitCount");                                    // 21
-    analysisManager->CreateNtupleDColumn("PrimaryEnergies", fEventAction->GetPrimaryEnergies()); // 22
-    analysisManager->CreateNtupleIColumn("PrimaryPDGIDs",   fEventAction->GetPrimaryPDGIDs());   // 23
+    analysisManager->CreateNtupleIColumn("CEEHitCount");                                    
+    analysisManager->CreateNtupleDColumn("PrimaryEnergies", fEventAction->GetPrimaryEnergies()); 
+    analysisManager->CreateNtupleIColumn("PrimaryPDGIDs",   fEventAction->GetPrimaryPDGIDs());   
     analysisManager->FinishNtuple();
 
 }

@@ -126,9 +126,6 @@ for (auto* lv : *store) {
   const bool isHEcell = (Has(nm, "HGCalHE"));
   const bool isAHtile = (Has(nm, "AHcal"));
     
-  //const bool isEEcell = Has(nm, "HGCalEE") && (Has(nm, "Layer"));
-  //const bool isHEcell = Has(nm, "HGCalHE") && (Has(nm, "Layer"));
-  //const bool isAHtile = Has(nm, "AHcal")   && (Has(nm, "Layer"));
 
   if (isEEcell) {
     lv->SetSensitiveDetector(CEESD);

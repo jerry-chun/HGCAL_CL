@@ -13,16 +13,16 @@ def object_condensation_loss(
     group_ids: torch.Tensor,
     *,
     q_min: float = 0.1,
-    eps: float = 1e-4,      # agreed numerical clamp
+    eps: float = 1e-4,  
     s_att: float = 1.0,
     s_rep: float = 1.0,
     s_coward: float = 1.0,
 ) -> torch.Tensor:
     """
-    OC loss for a single event, adapted to your dataset:
+    OC loss for a single event, adapted to our dataset:
       - every hit belongs to a truth shower (no noise)
-      - keep object-balanced attractive term
-      - full repulsion (no sampling)
+      - object-balanced attractive term
+      - full repulsion 
       - coward term only (no noise penalty)
     """
     device = beta.device
@@ -32,7 +32,7 @@ def object_condensation_loss(
     assert cluster_coords.shape[0] == N
     assert group_ids.shape[0] == N
 
-    # numeric safety only (for atanh)
+    # numeric safety 
     beta = beta.clamp(min=eps, max=1.0 - eps)
 
     unique_obj_ids = torch.unique(group_ids)
@@ -44,50 +44,37 @@ def object_condensation_loss(
     attractive_mask = (group_ids[:, None] == unique_obj_ids[None, :])
 
     # charge
-    q = torch.arctanh(beta).pow(2) + q_min  # (N,)
+    q = torch.arctanh(beta).pow(2) + q_min  
 
-    # pick condensation point per object (highest charge inside object)
-    alpha_idx = torch.argmax(q[:, None] * attractive_mask, dim=0)  # (K,)
+    # pick condensation point per object 
+    alpha_idx = torch.argmax(q[:, None] * attractive_mask, dim=0)  
 
     # coords and charges of condensation points
-    x_k = cluster_coords[alpha_idx]        # (K, D)
-    q_k = q[alpha_idx][None, :]            # (1, K)
-
-    # distances: (N, K)
+    x_k = cluster_coords[alpha_idx]        
+    q_k = q[alpha_idx][None, :]           
+    # distances: 
     dist = torch.cdist(cluster_coords, x_k)
 
-    # -------------------------
     # Attractive (object-balanced)
-    # -------------------------
-    v_att_jk = q[:, None] * q_k * attractive_mask * dist.pow(2)  # (N, K)
+    v_att_jk = q[:, None] * q_k * attractive_mask * dist.pow(2)  
 
-    # average per object then across objects (your "object-balanced" choice)
+    # average per object then across objects 
     obj_counts = attractive_mask.sum(dim=0).clamp_min(1.0)
     v_att = torch.mean(torch.sum(v_att_jk, dim=0) / obj_counts)
 
-    # -------------------------
     # Repulsive (hinge with radius 1.0 in latent space)
-    # -------------------------
     rep_mask = ~attractive_mask
     rep_counts = rep_mask.sum(dim=0).clamp_min(1.0)
 
-    v_rep_jk = q[:, None] * q_k * rep_mask * F.relu(1.0 - dist)   # (N, K)
+    v_rep_jk = q[:, None] * q_k * rep_mask * F.relu(1.0 - dist)   
     v_rep = torch.mean(torch.sum(v_rep_jk, dim=0) / rep_counts)
 
-    # -------------------------
     # Coward: condensation points should have beta -> 1
-    # -------------------------
     l_coward = torch.mean(1.0 - beta[alpha_idx])
-    print("s_att:", s_att * v_att)
-    print("s_rep:", s_rep * v_rep)
-    print("s_coward:", s_coward*l_coward)
-
     return s_att * v_att + s_rep * v_rep + s_coward * l_coward
 
 
-# -----------------------------
-# Train / Val loops (per-event splitting kept)
-# -----------------------------
+# Train / Val loops 
 def train_oc(train_loader, model, optimizer, device, scaler):
     model.train()
     total_loss = 0.0
@@ -96,9 +83,8 @@ def train_oc(train_loader, model, optimizer, device, scaler):
         data = data.to(device, non_blocking=True)
         optimizer.zero_grad(set_to_none=True)
 
-        assoc_tensor = data.assoc  # (N,)
-        batch = data.x_batch       # (N,)
-
+        assoc_tensor = data.assoc  
+        batch = data.x_batch      
         with autocast():
             beta, cluster_coords, _ = model(data.x, batch)
 
@@ -109,19 +95,19 @@ def train_oc(train_loader, model, optimizer, device, scaler):
             coord_splits = torch.split(cluster_coords, counts.tolist())
             group_splits = torch.split(assoc_tensor, counts.tolist())
 
-        loss = torch.stack([
-            object_condensation_loss(
-                beta=b,
-                cluster_coords=c,
-                group_ids=g,
-                q_min=0.1,
-                eps=1e-4,
-                s_att=100.0,
-                s_rep=1.0,
-                s_coward=0.5,
-            )
-            for b, c, g in zip(beta_splits, coord_splits, group_splits)
-        ]).mean()
+            loss = torch.stack([
+                object_condensation_loss(
+                    beta=b.float(),
+                    cluster_coords=c.float(),
+                    group_ids=g,
+                    q_min=0.1,
+                    eps=1e-3,
+                    s_att=50.0,
+                    s_rep=50.0,
+                    s_coward=1,
+                )
+                for b, c, g in zip(beta_splits, coord_splits, group_splits)
+            ]).mean()
 
         scaler.scale(loss).backward()
         scaler.step(optimizer)
@@ -153,19 +139,19 @@ def test_oc(test_loader, model, device):
             coord_splits = torch.split(cluster_coords, counts.tolist())
             group_splits = torch.split(assoc_tensor, counts.tolist())
 
-        loss = torch.stack([
-            object_condensation_loss(
-                beta=b,
-                cluster_coords=c,
-                group_ids=g,
-                q_min=0.1,
-                eps=1e-4,
-                s_att=100.0,
-                s_rep=1.0,
-                s_coward=0.5,
-            )
-            for b, c, g in zip(beta_splits, coord_splits, group_splits)
-        ]).mean()
+            loss = torch.stack([
+                object_condensation_loss(
+                    beta=b.float(),
+                    cluster_coords=c.float(),
+                    group_ids=g,
+                    q_min=0.1,
+                    eps=1e-3,
+                    s_att=50,
+                    s_rep=50.0,
+                    s_coward=0.5,
+                )
+                for b, c, g in zip(beta_splits, coord_splits, group_splits)
+            ]).mean()
 
         total_loss += float(loss.detach())
 

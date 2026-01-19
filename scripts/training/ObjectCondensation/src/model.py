@@ -6,9 +6,6 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast
 
 
-# -----------------------------
-# Model (UNCHANGED)
-# -----------------------------
 class Net(nn.Module):
     def __init__(
         self,

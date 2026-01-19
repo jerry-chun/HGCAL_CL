@@ -15,7 +15,6 @@
 
 #include <algorithm>  // for std::max_element, etc.
 
-// Anonymous namespace for helper structs / functions
 namespace {
   struct LayerRange {
     double z_min;
@@ -23,7 +22,6 @@ namespace {
   };
 
   // 50 layers, indices 1..50 in the return value.
-  // Values taken from your histogram analysis.
   static const LayerRange kLayerRanges[50] = {
     {319.666, 322.166},
     {322.166, 324.665},
@@ -80,18 +78,17 @@ namespace {
   // Map z (in cm) to layer index 1..50. Returns 0 if outside all ranges.
   inline int ZtoLayer(double z_cm)
   {
-    // Small tolerance so we don't lose hits at boundaries due to rounding
-    constexpr double eps = 1e-4; // 1 micron in cm
+    constexpr double eps = 1e-4; 
     for (int i = 0; i < 50; ++i) {
       if (z_cm >= kLayerRanges[i].z_min - eps &&
           z_cm <= kLayerRanges[i].z_max + eps) {
-        return i + 1;  // layers numbered from 1
+        return i + 1;  
       }
     }
-    return 0; // no valid layer
+    return 0; 
   }
 
-} // anonymous namespace
+} 
 
 const G4String HGCALTBCEESD::fCEEHitsCollectionName = "CEEHitsCollectionName";
 
@@ -106,7 +103,6 @@ HGCALTBCEESD::~HGCALTBCEESD() {}
 
 void HGCALTBCEESD::Initialize(G4HCofThisEvent* hce)
 {
-  // New hits collection for this event
   fHitsCollection =
     new HGCALTBCEEHitsCollection(SensitiveDetectorName, collectionName[0]);
 
