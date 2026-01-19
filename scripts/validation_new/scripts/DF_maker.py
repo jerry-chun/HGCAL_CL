@@ -57,7 +57,7 @@ def main():
 
     #OC-specific clustering
     ap.add_argument(
-        "--oc_beta_thr", type=float, default=0.2,
+        "--oc_beta_thr", type=float, default=0.1,
         help="Minimum beta for extra OC centers"
     )
     ap.add_argument(

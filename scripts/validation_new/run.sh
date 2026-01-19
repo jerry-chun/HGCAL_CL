@@ -2,46 +2,33 @@
 
 source /cvmfs/sft.cern.ch/lcg/views/LCG_105a_cuda/x86_64-el9-gcc11-opt/setup.sh
 
-BASE_DIR="/vols/cms/mm1221/geant4sim/simulations/build/test_2_10"
-RAW_DIR="${BASE_DIR}/raw"
+# ---- CONFIG ----
+INPUT_DIR="/vols/cms/mm1221/geant4sim/simulations/build/Test_EM_11_20/"
+CODE_DIR="/vols/cms/mm1221/geant4sim/scripts/validation_new"
 
-FILENAME="$1"                      # e.g. file_042.root
-REALFILE="${RAW_DIR}/${FILENAME}"
+FILENAME="$1"
+INPUT_FILE="${INPUT_DIR}/${FILENAME}"
 
-if [[ ! -f "${REALFILE}" ]]; then
-  echo "ERROR: input file not found: ${REALFILE}"
-  exit 2
+if [[ ! -f "${INPUT_FILE}" ]]; then
+  echo "ERROR: file not found: ${INPUT_FILE}"
+  exit 1
 fi
 
-# Unique per-job workspace folder
-JOBTAG="${CLUSTER:-local}.${PROCESS:-0}"
-WORKDIR="work_${JOBTAG}"
+export PYTHONPATH="${CODE_DIR}:${PYTHONPATH:-}"
 
-# Ensure cleanup even if job fails
-cleanup() {
-  rm -rf "${WORKDIR}"
-}
-trap cleanup EXIT
+mkdir -p dfs
 
-mkdir -p "${WORKDIR}/raw" dfs
+OUTCSV="dfs/${FILENAME%.root}.csv"
 
-# Put only this file into the job's raw/ via symlink (fast + no copy)
-cp -p "${REALFILE}" "${WORKDIR}/raw/${FILENAME}"
-# Output path named after input file
-OUTCSV="/vols/cms/mm1221/geant4sim/scripts/validation_new/dfs/${FILENAME%.root}.csv"
-PROJECT_DIR="/vols/cms/mm1221/geant4sim/scripts/validation_new/"   # <-- CHANGE THIS
-
-cd "${PROJECT_DIR}"
 python -m scripts.DF_maker \
-  -i "${WORKDIR}" \
+  -i "${INPUT_FILE}" \
   --out "${OUTCSV}" \
-  -clustering_algorithm agglomerative \
+  -clustering_algorithm contrastive \
   -distance_threshold 0.25 \
   -metric cosine \
   -linkage average \
-  -cluster_events 1000 \
-  -max_events 1000
+  -cluster_events 100 \
+  -max_events 100
 
 echo "Wrote ${OUTCSV}"
-ls -lh dfs
 

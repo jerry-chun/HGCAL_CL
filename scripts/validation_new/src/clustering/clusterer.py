@@ -29,7 +29,7 @@ def _cluster_contrastive(config, model, data_loader, device):
 
         agglomerative = AgglomerativeClustering(
             n_clusters=None,
-            distance_threshold=24,
+            distance_threshold=26,
             linkage="ward",         
             metric="euclidean",
             connectivity=connectivity,
@@ -71,7 +71,6 @@ def _cluster_oc(config, model, data_loader, device):
 
             beta, cluster_coords, batch = model(data.x, data.x_batch)
 
-            # batch may contain multiple events (if batch_size>1)
             num_events = int(batch.max().item() + 1)
 
             for evt in range(num_events):
@@ -79,14 +78,15 @@ def _cluster_oc(config, model, data_loader, device):
 
                 coords_evt = cluster_coords[evt_mask]
                 beta_evt = beta[evt_mask]
+                
+                print('beta:', beta_evt)
+                
 
                 cluster_ids_evt = oc_cluster_single_event(
                     coords_evt,
                     beta_evt,
-                    beta_thr=beta_thr,
-                    min_center_separation=min_sep,
-                    use_distance_cut=use_cut,
-                    assignment_radius=assign_r,
+                    beta_thr= 0.1,   
+                    td = 0.3,  
                 )
 
                 all_reco_ids.append(cluster_ids_evt.cpu().numpy())
