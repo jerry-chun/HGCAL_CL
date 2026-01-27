@@ -28,17 +28,18 @@ warnings.filterwarnings(
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Train_EM_2_10/"
-vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Val_EM_2_10/"
+ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Train_EM_2_5/"
+vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Val_EM_2_5/"
 
-data_train = CCV1(root=ipath, inp="train", max_events=350000)
-data_val   = CCV1(root=vpath,   inp="val", max_events=150000)
+data_train = CCV1(root=ipath, inp="train", max_events=2000)
+data_val   = CCV1(root=vpath,   inp="val", max_events=100)
+
 
 model = Net(
     hidden_dim=64,
     num_layers=3,
     dropout=0.01,
-    contrastive_dim=16,
+    contrastive_dim=3,
     k=24,
 ).to(device)
 
@@ -62,7 +63,8 @@ val_loader = DataLoader(
 )
 
 # New output directory name to reflect hits & cubesim
-output_dir = '/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_10'
+output_dir = '/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_5_Test'
+
 
 os.makedirs(output_dir, exist_ok=True)
 

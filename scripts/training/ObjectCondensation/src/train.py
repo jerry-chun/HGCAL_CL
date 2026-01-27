@@ -102,9 +102,9 @@ def train_oc(train_loader, model, optimizer, device, scaler):
                     group_ids=g,
                     q_min=0.1,
                     eps=1e-3,
-                    s_att=50.0,
-                    s_rep=50.0,
-                    s_coward=1,
+                    s_att=1.0,
+                    s_rep=1.0,
+                    s_coward=1.0,
                 )
                 for b, c, g in zip(beta_splits, coord_splits, group_splits)
             ]).mean()
@@ -146,9 +146,9 @@ def test_oc(test_loader, model, device):
                     group_ids=g,
                     q_min=0.1,
                     eps=1e-3,
-                    s_att=50,
-                    s_rep=50.0,
-                    s_coward=0.5,
+                    s_att=1.0,
+                    s_rep=1.0,
+                    s_coward=1.0,
                 )
                 for b, c, g in zip(beta_splits, coord_splits, group_splits)
             ]).mean()

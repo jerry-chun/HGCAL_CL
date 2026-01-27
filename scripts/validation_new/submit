@@ -6,7 +6,7 @@ output = logs/job.$(Cluster).$(Process).out
 error  = logs/job.$(Cluster).$(Process).err
 log    = logs/job.$(Cluster).$(Process).log
 
-request_cpus = 1
+request_cpus = 2
 +MaxRuntime  = 10000
 
 
@@ -17,5 +17,5 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_output_files = dfs
 
-queue F from EM_2_10.txt
+queue F from EM_11_20.txt
 

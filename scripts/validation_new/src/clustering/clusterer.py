@@ -17,8 +17,9 @@ def _cluster_contrastive(config, model, data_loader, device):
         out = model(data.x, data.x_batch)
         preds = out[0]
         #xyz = data.x[:, :3].detach().cpu().numpy()
+        
+        #k = 24
         """
-        k = 8
         connectivity = kneighbors_graph(
             xyz,
             n_neighbors=k,
@@ -27,12 +28,13 @@ def _cluster_contrastive(config, model, data_loader, device):
             n_jobs=-1,
         )
         """
+        
         agglomerative = AgglomerativeClustering(
             n_clusters=None,
-            distance_threshold=37,
+            distance_threshold=38,
             linkage="ward",         
             metric="euclidean",
-            # connectivity=connectivity,
+            #connectivity=connectivity,
             # compute_distances=True,
         )
 

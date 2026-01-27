@@ -2,7 +2,6 @@ import numpy as np
 import subprocess
 import tqdm
 from tqdm import tqdm
-import pandas as pd
 
 import os
 import os.path as osp

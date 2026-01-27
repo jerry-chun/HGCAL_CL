@@ -8,4 +8,4 @@ simulations/build
 *.txt
 *.out
 *.err
-
+scripts/training/TempFree
