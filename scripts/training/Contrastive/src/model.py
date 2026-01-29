@@ -12,16 +12,9 @@ class Net(nn.Module):
         contrastive_dim=8,
         k=20 
     ):
-        """
-        Initializes a graph network that uses DynamicEdgeConv layers.
-
-        Args:
-            hidden_dim (int): Dimension of hidden layers.
-            num_layers (int): Number of DynamicEdgeConv layers.
-            dropout (float): Dropout rate.
-            contrastive_dim (int): Output dimension of the final layer.
-            k (int): Number of neighbors in k-NN for DynamicEdgeConv.
-        """
+        
+        # GNN that uses DynamicEdgeConv layers.
+        
         super(Net, self).__init__()
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
@@ -46,7 +39,7 @@ class Net(nn.Module):
             DynamicEdgeConv(
                 nn=build_mlp(),
                 k=self.k,
-                aggr='max'  # or 'mean', 'sum', etc.
+                aggr='max'  
             )
             for _ in range(num_layers)
         ])
@@ -64,13 +57,7 @@ class Net(nn.Module):
     def forward(self, x, batch=None):
         """
         Forward pass of the DynamicEdgeConv-based graph network.
-
-        Args:
-            x (torch.Tensor): Input node features of shape (N, 8).
-            batch (torch.Tensor, optional): Batch vector for nodes.
-
-        Returns:
-            tuple: (Output features, Batch vector)
+        Returns a Tuple
         """
         x_enc = self.lc_encode(x)  
 

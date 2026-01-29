@@ -31,7 +31,7 @@ def _cluster_contrastive(config, model, data_loader, device):
         
         agglomerative = AgglomerativeClustering(
             n_clusters=None,
-            distance_threshold=38,
+            distance_threshold=4.5,
             linkage="ward",         
             metric="euclidean",
             #connectivity=connectivity,

@@ -1,157 +1,222 @@
 import torch
 import torch.nn.functional as F
 from torch.cuda.amp import autocast
-from torch_geometric.nn.pool import knn_graph
+from tqdm import tqdm
 
-def _group_sums(x: torch.Tensor, group_ids: torch.Tensor, num_groups: int) -> torch.Tensor:
-    """
-    x: (N, D) 
-    group_ids: (N,) in [0, num_groups-1]
-    returns: (num_groups, D) or (num_groups,)
-    """
 
-    out = x.new_zeros((num_groups, x.size(1)))
-    out.index_add_(0, group_ids, x)
-    return out
+def _group_mean(values: torch.Tensor, group_ids: torch.Tensor, num_groups: int) -> torch.Tensor:
+    sums = values.new_zeros((num_groups,))
+    cnts = values.new_zeros((num_groups,))
+    sums.index_add_(0, group_ids, values)
+    cnts.index_add_(0, group_ids, torch.ones_like(values))
+    return sums / cnts.clamp_min(1.0)
 
-def _group_counts(group_ids: torch.Tensor, num_groups: int) -> torch.Tensor:
-    return torch.bincount(group_ids, minlength=num_groups).clamp_min(1)
 
-def _sample_k_from_mask(mask_2d: torch.Tensor, k: int) -> torch.Tensor:
-    """
-    Uniform-ish sampling without replacement from a boolean mask per row, via random scores + topk.
-    mask_2d: (N, M) bool
-    returns indices: (N, k) long, each row chooses k True positions (assumes at least k Trues per row).
-    """
-    r = torch.rand(mask_2d.shape, device=mask_2d.device)
-    r = r.masked_fill(~mask_2d, float("-inf"))
-    _, idx = torch.topk(r, k=k, dim=1)
-    return idx  
-
-def contrastive_loss_event_v3(
+def supcon_loss_shower_equal(
     embeddings: torch.Tensor,
     group_ids: torch.Tensor,
-    coords: torch.Tensor,
     temperature: float = 0.1,
-    k_geo: int = 32,
-    k_neg: int = 8,
-    lambda_compact: float = 0.2,
 ) -> torch.Tensor:
+    """
+    Full supervised contrastive loss within ONE event (all positives, all negatives),
+    but with SHOWER-EQUAL weighting:
+
+      1) Compute per-anchor SupCon loss L_i (mean over positives for that anchor)
+      2) Average L_i within each shower (group)
+      3) Average over showers that have at least one valid anchor (>=2 hits)
+
+    This ensures each shower contributes equally, not proportional to number of hits.
+
+
+    """
     device = embeddings.device
     N = embeddings.size(0)
+    if N <= 1:
+        return embeddings.new_tensor(0.0)
 
-    z = F.normalize(embeddings, p=2, dim=1)  
+    # Remap group ids to [0..G-1] for cheap bincount/scatter
+    _, labels = torch.unique(group_ids, sorted=False, return_inverse=True)
+    G = int(labels.max().item()) + 1
 
-   
-    uniq, inv = torch.unique(group_ids, return_inverse=True)
-    g = inv
-    G = uniq.numel()
+    # Compute logits in fp32 for stability (important under autocast)
+    z = F.normalize(embeddings.float(), p=2, dim=1)          
+    logits = (z @ z.t()) / float(temperature)                
 
-    # 1) Positive sampling (random within group)
-    sim_full = z @ z.t() 
-    idx = torch.arange(N, device=device)
+    # Masks
+    not_self = ~torch.eye(N, dtype=torch.bool, device=device)
+    logits = logits.masked_fill(~not_self, float("-inf"))     # exclude self from denom
 
-    same = (g[:, None] == g[None, :])
-    same.fill_diagonal_(False)
+    pos_mask = (labels[:, None] == labels[None, :]) & not_self  
+    valid_anchor = pos_mask.any(dim=1)                          
 
-    rpos = torch.rand_like(sim_full)
-    rpos = rpos.masked_fill(~same, float("-inf"))
-    pos_j = torch.argmax(rpos, dim=1)
-    s_pos = sim_full[idx, pos_j]  
+    if not bool(valid_anchor.any()):
+        return embeddings.new_tensor(0.0)
 
-    # 2) Two-tier negatives:
-    #    (a) LOCAL semi-hard from geo-kNN
-    #    (b) GLOBAL random fallback if not enough local negatives
-    edge_index = knn_graph(coords, k=k_geo, loop=False)
-    src = edge_index[0]
-    dst = edge_index[1]
+    # log denom: log sum_{a != i} exp(logits_{i,a})
+    log_denom = torch.logsumexp(logits, dim=1)          
 
-    s_edge = (z[src] * z[dst]).sum(dim=1)
+    # log-prob matrix
+    log_prob = logits - log_denom[:, None]          
 
-    order = torch.argsort(src)
-    src = src[order]
-    dst = dst[order]
-    s_edge = s_edge[order]
+    # mean log-prob over positives per anchor
+    pos_counts = pos_mask.sum(dim=1).clamp_min(1)           
+    mean_log_prob_pos = (log_prob.masked_fill(~pos_mask, 0.0).sum(dim=1) / pos_counts)
 
-    dst_mat = dst.view(N, k_geo)    
-    s_mat = s_edge.view(N, k_geo)   
+    loss_i = -mean_log_prob_pos                             
 
-    # local negative mask
-    local_neg_mask = (g[dst_mat] != g[:, None])  
-    local_neg_counts = local_neg_mask.sum(dim=1) 
+    # Shower-equal reduction
+    loss_valid = loss_i[valid_anchor]                          
+    labels_valid = labels[valid_anchor]                        
 
-    s_local = s_mat.masked_fill(~local_neg_mask, float("-inf"))
-    s_local_topk, _ = torch.topk(s_local, k=k_neg, dim=1)  
+    # Per-shower mean of anchor losses
+    per_shower = _group_mean(loss_valid, labels_valid, G)      
 
-    # (b) GLOBAL fallback negatives (random) for rows with insufficient locals 
-    global_neg_mask = (g[:, None] != g[None, :])
-    global_neg_mask.fill_diagonal_(False)
+    shower_has_valid = torch.zeros((G,), dtype=torch.bool, device=device)
+    shower_has_valid.index_fill_(0, torch.unique(labels_valid), True)
 
-    global_neg_idx = _sample_k_from_mask(global_neg_mask, k=k_neg)  
+    loss = per_shower[shower_has_valid].mean()
 
-    s_global = sim_full[idx[:, None], global_neg_idx]  
-
-    use_local = (local_neg_counts >= k_neg)  
-    s_neg_topk = torch.where(use_local[:, None], s_local_topk, s_global) 
-
-    # 3) InfoNCE with K negatives (per-anchor)
-    pos_logit = s_pos / temperature          
-    neg_logits = s_neg_topk / temperature    
-
-    denom = torch.logsumexp(torch.cat([pos_logit[:, None], neg_logits], dim=1), dim=1)
-    loss_nce = -(pos_logit - denom)        
-
-    # 4) Centroid compactness (per-anchor)
-    sum_c = _group_sums(z, g, G)              
-    mu = F.normalize(sum_c, p=2, dim=1)      
-    cos_to_mu = (z * mu[g]).sum(dim=1)       
-    loss_comp = 1.0 - cos_to_mu             
-
-    loss_i = loss_nce + lambda_compact * loss_comp  
-    
-    print('1',loss_nce)
-    print('2', lambda_compact * loss_comp)
-
-    # 5) Equal per-particle weighting
-    sum_loss_c = _group_sums(loss_i, g, G)         
-    cnt_c = _group_counts(g, G).to(sum_loss_c)     
-    mean_loss_c = sum_loss_c / cnt_c                
-    loss_event = mean_loss_c.mean()
-
-    return loss_event
+    # Return in original dtype
+    return loss.to(embeddings.dtype)
 
 
-def contrastive_loss_batch_v3(
+def _split_by_batch(x: torch.Tensor, batch: torch.Tensor):
+    """
+    Split x into a tuple of tensors per event
+    Uses bincount on GPU (fast) and torch.split.
+    """
+    counts = torch.bincount(batch)
+    counts = counts[counts > 0]
+    return torch.split(x, counts.tolist())
+
+import torch
+import torch.nn.functional as F
+
+
+def supcon_loss_node_equal(
     embeddings: torch.Tensor,
     group_ids: torch.Tensor,
-    batch_ids: torch.Tensor,
-    coords: torch.Tensor,
     temperature: float = 0.1,
-    k_geo: int = 32,
-    k_neg: int = 8,
-    lambda_compact: float = 0.2,
 ) -> torch.Tensor:
-    counts = torch.bincount(batch_ids)
-    counts = counts[counts > 0]
+    """
+    Full supervised contrastive loss (SupCon) within ONE event,
+    with NODE-EQUAL weighting (each anchor contributes equally).
 
-    emb_splits = torch.split(embeddings, counts.tolist())
-    gid_splits = torch.split(group_ids, counts.tolist())
-    coord_splits = torch.split(coords, counts.tolist())
+    embeddings: (N, D)
+    group_ids:  (N,) shower id per hit
+    temperature: tau
 
-    losses = []
-    for e, g, c in zip(emb_splits, gid_splits, coord_splits):
-        losses.append(
-            contrastive_loss_event_v3(
-                embeddings=e,
-                group_ids=g,
-                coords=c,
-                temperature=temperature,
-                k_geo=k_geo,
-                k_neg=k_neg,
-                lambda_compact=lambda_compact,
-            )
-        )
-    return torch.stack(losses).mean()
+    Returns scalar loss (0 if no anchor has positives).
+    """
+    device = embeddings.device
+    N = embeddings.size(0)
+    if N <= 1:
+        return embeddings.new_tensor(0.0)
+
+    # Normalize + cosine similarity (fp32 for stability)
+    z = F.normalize(embeddings.float(), p=2, dim=1)
+    logits = (z @ z.t()) / float(temperature)
+
+    # Masks
+    not_self = ~torch.eye(N, dtype=torch.bool, device=device)
+    logits = logits.masked_fill(~not_self, float("-inf"))
+
+    labels = group_ids
+    pos_mask = (labels[:, None] == labels[None, :]) & not_self
+    valid_anchor = pos_mask.any(dim=1)
+
+    if not bool(valid_anchor.any()):
+        return embeddings.new_tensor(0.0)
+
+    # Denominator
+    log_denom = torch.logsumexp(logits, dim=1)
+
+    # Log-probabilities
+    log_prob = logits - log_denom[:, None]
+
+    # Mean over positives per anchor
+    pos_counts = pos_mask.sum(dim=1).clamp_min(1)
+    mean_log_prob_pos = (
+        log_prob.masked_fill(~pos_mask, 0.0).sum(dim=1) / pos_counts
+    )
+
+    loss_i = -mean_log_prob_pos
+
+    # NODE-EQUAL reduction
+    loss = loss_i[valid_anchor].mean()
+    return loss.to(embeddings.dtype)
+
+def sampled_contrastive_loss(
+    embeddings: torch.Tensor,
+    group_ids: torch.Tensor,
+    temperature: float = 0.25,
+    *,
+    k_pos: int = 16,
+    k_neg: int = 16,
+    generator: torch.Generator | None = None,
+) -> torch.Tensor:
+    """
+    Partially supervised contrastive loss within ONE event.
+
+    For each anchor:
+      - sample up to k_pos positives from same group
+      - sample up to k_neg negatives from other groups
+      - denominator includes only sampled positives + sampled negatives
+
+    NODE-EQUAL reduction.
+
+    embeddings: (N, D)
+    group_ids:  (N,)
+    temperature: tau
+    """
+    device = embeddings.device
+    N = embeddings.size(0)
+    if N <= 1:
+        return embeddings.new_tensor(0.0)
+
+    z = F.normalize(embeddings.float(), p=2, dim=1)
+    logits = (z @ z.t()) / float(temperature)
+
+    not_self = ~torch.eye(N, dtype=torch.bool, device=device)
+    logits = logits.masked_fill(~not_self, float("-inf"))
+
+    labels = group_ids
+    loss_vals = []
+
+    for i in range(N):
+        # positives
+        pos_idx = torch.nonzero(
+            (labels == labels[i]) & (torch.arange(N, device=device) != i),
+            as_tuple=False,
+        ).flatten()
+
+        if pos_idx.numel() == 0:
+            continue
+
+        if pos_idx.numel() > k_pos:
+            perm = torch.randperm(pos_idx.numel(), device=device, generator=generator)
+            pos_idx = pos_idx[perm[:k_pos]]
+
+        # negatives
+        neg_idx = torch.nonzero(labels != labels[i], as_tuple=False).flatten()
+        if neg_idx.numel() == 0:
+            continue
+
+        if neg_idx.numel() > k_neg:
+            perm = torch.randperm(neg_idx.numel(), device=device, generator=generator)
+            neg_idx = neg_idx[perm[:k_neg]]
+
+        denom_idx = torch.cat([pos_idx, neg_idx], dim=0)
+
+        # compute loss for anchor i
+        log_denom = torch.logsumexp(logits[i, denom_idx], dim=0)
+        mean_pos = logits[i, pos_idx].mean()
+        loss_vals.append(-mean_pos + log_denom)
+
+    if len(loss_vals) == 0:
+        return embeddings.new_tensor(0.0)
+
+    return torch.stack(loss_vals).mean().to(embeddings.dtype)
 
 
 def train_new(
@@ -160,33 +225,29 @@ def train_new(
     optimizer,
     device,
     scaler,
+    *,
     temperature: float = 0.1,
-    k_geo: int = 32,
-    k_neg: int = 8,
-    lambda_compact: float = 0.2,
-    coord_cols=(0, 1, 2),  
 ):
     model.train()
     total_loss = 0.0
 
-    for data in train_loader:
+    for data in tqdm(train_loader, desc="Training"):
         data = data.to(device, non_blocking=True)
         optimizer.zero_grad(set_to_none=True)
 
-        coords = data.x[:, list(coord_cols)].contiguous()
+        assoc = data.assoc  
 
         with autocast():
             embeddings, _ = model(data.x, data.x_batch)
-            loss = contrastive_loss_batch_v3(
-                embeddings=embeddings,
-                group_ids=data.assoc,
-                batch_ids=data.x_batch,
-                coords=coords,
-                temperature=temperature,
-                k_geo=k_geo,
-                k_neg=k_neg,
-                lambda_compact=lambda_compact,
-            )
+
+            emb_events = _split_by_batch(embeddings, data.x_batch)
+            gid_events = _split_by_batch(assoc, data.x_batch)
+
+            # Mean over events
+            loss = torch.stack([
+                sampled_contrastive_loss(e, g, temperature=temperature)
+                for e, g in zip(emb_events, gid_events)
+            ]).mean()
 
         scaler.scale(loss).backward()
         scaler.step(optimizer)
@@ -194,7 +255,7 @@ def train_new(
 
         total_loss += float(loss.detach())
 
-    return total_loss / len(train_loader)
+    return total_loss / max(1, len(train_loader))
 
 
 @torch.no_grad()
@@ -202,32 +263,27 @@ def test_new(
     test_loader,
     model,
     device,
+    *,
     temperature: float = 0.1,
-    k_geo: int = 32,
-    k_neg: int = 8,
-    lambda_compact: float = 0.2,
-    coord_cols=(0, 1, 2),  
 ):
     model.eval()
     total_loss = 0.0
 
-    for data in test_loader:
+    for data in tqdm(test_loader, desc="Validation"):
         data = data.to(device, non_blocking=True)
-        coords = data.x[:, list(coord_cols)].contiguous()
+        assoc = data.assoc
 
         with autocast():
             embeddings, _ = model(data.x, data.x_batch)
-            loss = contrastive_loss_batch_v3(
-                embeddings=embeddings,
-                group_ids=data.assoc,
-                batch_ids=data.x_batch,
-                coords=coords,
-                temperature=temperature,
-                k_geo=k_geo,
-                k_neg=k_neg,
-                lambda_compact=lambda_compact,
-            )
+
+            emb_events = _split_by_batch(embeddings, data.x_batch)
+            gid_events = _split_by_batch(assoc, data.x_batch)
+
+            loss = torch.stack([
+                sampled_contrastive_loss(e, g, temperature=temperature)
+                for e, g in zip(emb_events, gid_events)
+            ]).mean()
 
         total_loss += float(loss.detach())
 
-    return total_loss / len(test_loader)
+    return total_loss / max(1, len(test_loader))

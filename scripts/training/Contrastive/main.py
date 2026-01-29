@@ -28,20 +28,21 @@ warnings.filterwarnings(
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Train_EM_2_5/"
-vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Val_EM_2_5/"
+ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Train_EM_2_10/"
+vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Val_EM_2_10/"
 
-data_train = CCV1(root=ipath, inp="train", max_events=2000)
-data_val   = CCV1(root=vpath,   inp="val", max_events=100)
+data_train = CCV1(root=ipath, inp="train", max_events=5000)
+data_val   = CCV1(root=vpath, inp="val", max_events=1000)
 
 
 model = Net(
     hidden_dim=64,
     num_layers=3,
     dropout=0.01,
-    contrastive_dim=3,
+    contrastive_dim=16,
     k=24,
 ).to(device)
+print("Model Loaded")
 
 BS = 16
 
@@ -63,7 +64,8 @@ val_loader = DataLoader(
 )
 
 # New output directory name to reflect hits & cubesim
-output_dir = '/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_5_Test'
+output_dir = '/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_10_CD16_Sampled'
+
 
 
 os.makedirs(output_dir, exist_ok=True)
@@ -80,6 +82,7 @@ if not os.path.exists(csv_path):
 
 print("Starting full training with curriculum for hard negative mining...")
 epochs = 100
+print("starting:")
 
 for epoch in range(epochs):
 

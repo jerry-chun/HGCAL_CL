@@ -28,7 +28,7 @@ def main():
         "--task",
         type=str,
         choices=["contrastive", "oc"],
-        default="oc",
+        default="contrastive",
         help="Type of model / reconstruction to use"
     )
 
@@ -90,7 +90,7 @@ def main():
 
     # Model config & load
     model_config = {
-        "task": "oc",
+        "task": "contrastive",
         "hidden_dim": 64,
         "num_layers": 3,
         "dropout": 0.01,
@@ -98,7 +98,7 @@ def main():
 
         "contrastive_dim": 16,
         "coord_dim": 3,
-        "path" : "/vols/cms/mm1221/geant4sim/scripts/training/ObjectCondensation/runs/EM_2_5_CD3/best_model.pt"
+        "path" : "/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_5_CD16_Newww/best_model.pt"
     }
 
     model = model_loader(

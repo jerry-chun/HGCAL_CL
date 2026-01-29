@@ -3,7 +3,7 @@
 source /cvmfs/sft.cern.ch/lcg/views/LCG_105a_cuda/x86_64-el9-gcc11-opt/setup.sh
 
 # ---- CONFIG ----
-INPUT_DIR="/vols/cms/mm1221/geant4sim/simulations/build/Test_EM_11_20/"
+INPUT_DIR="/vols/cms/mm1221/geant4sim/simulations/build/Test_EM_1_20/"
 CODE_DIR="/vols/cms/mm1221/geant4sim/scripts/validation_new"
 
 FILENAME="$1"
@@ -23,7 +23,7 @@ OUTCSV="dfs/${FILENAME%.root}.csv"
 python -m scripts.DF_maker \
   -i "${INPUT_FILE}" \
   --out "${OUTCSV}" \
-  -clustering_algorithm oc \
+  -clustering_algorithm contrastive \
   -distance_threshold 0.25 \
   -metric cosine \
   -linkage average \
