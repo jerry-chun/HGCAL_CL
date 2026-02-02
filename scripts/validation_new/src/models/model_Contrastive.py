@@ -14,13 +14,6 @@ class Net_Contrastive(nn.Module):
     ):
         """
         Initializes a graph network that uses DynamicEdgeConv layers.
-
-        Args:
-            hidden_dim (int): Dimension of hidden layers.
-            num_layers (int): Number of DynamicEdgeConv layers.
-            dropout (float): Dropout rate.
-            contrastive_dim (int): Output dimension of the final layer.
-            k (int): Number of neighbors in k-NN for DynamicEdgeConv.
         """
         super(Net_Contrastive, self).__init__()
         self.hidden_dim = hidden_dim
@@ -28,7 +21,7 @@ class Net_Contrastive(nn.Module):
         self.dropout = dropout
         self.k = k
 
-        # Input encoder (assumes input features of size 8).
+        # Input encoder 
         self.lc_encode = nn.Sequential(
             nn.Linear(5, hidden_dim),
             nn.ELU(),
@@ -37,7 +30,6 @@ class Net_Contrastive(nn.Module):
         )
 
         # Build the MLP (edge function) for each DynamicEdgeConv layer.
-        # For each neighbor pair, we get a feature vector of size 2*hidden_dim.
         def build_mlp():
             return nn.Sequential(
                 nn.Linear(2 * hidden_dim, hidden_dim),
@@ -69,20 +61,13 @@ class Net_Contrastive(nn.Module):
     def forward(self, x, batch=None):
         """
         Forward pass of the DynamicEdgeConv-based graph network.
-
-        Args:
-            x (torch.Tensor): Input node features of shape (N, 8).
-            batch (torch.Tensor, optional): Batch vector for nodes.
-
-        Returns:
-            tuple: (Output features, Batch vector)
         """
         # Encode input features to hidden_dim.
-        x_enc = self.lc_encode(x)  # (N, hidden_dim)
+        x_enc = self.lc_encode(x)  
 
         # Pass through each DynamicEdgeConv layer.
         for conv in self.edgeconv_layers:
-            x_enc = conv(x_enc, batch)   # edges are dynamically computed
+            x_enc = conv(x_enc, batch)   
             x_enc = F.elu(x_enc)
             x_enc = F.dropout(x_enc, p=self.dropout, training=self.training)
 

@@ -10,32 +10,22 @@ from sklearn.neighbors import kneighbors_graph
 def _cluster_contrastive(config, model, data_loader, device):
     reconstruction_labels = []
     start_time = time.time()
+    dt = config["distance_threshold"]
+    met = config["metric"]
+    link = config["linkage"]
 
     for i, data in enumerate(data_loader):
         data = data.to(device)
 
         out = model(data.x, data.x_batch)
         preds = out[0]
-        #xyz = data.x[:, :3].detach().cpu().numpy()
         
-        #k = 24
-        """
-        connectivity = kneighbors_graph(
-            xyz,
-            n_neighbors=k,
-            mode="connectivity",
-            include_self=False,
-            n_jobs=-1,
-        )
-        """
         
         agglomerative = AgglomerativeClustering(
             n_clusters=None,
-            distance_threshold=4.5,
-            linkage="ward",         
-            metric="euclidean",
-            #connectivity=connectivity,
-            # compute_distances=True,
+            distance_threshold=dt,
+            linkage=link,         
+            metric=met,
         )
 
         preds_np = preds.detach().cpu().numpy()
@@ -43,10 +33,8 @@ def _cluster_contrastive(config, model, data_loader, device):
 
         reconstruction_labels.append(cluster_labels)
 
-
-
-
-
+        if i > condif["max_events"] - 1:
+            break
 
     end_time = time.time()
     time_diff = end_time - start_time
@@ -63,9 +51,7 @@ def _cluster_oc(config, model, data_loader, device):
     start_time = time.time()
 
     beta_thr = config["oc_beta_thr"]
-    min_sep = config["oc_min_center_separation"]
-    use_cut = config["oc_use_distance_cut"]
-    assign_r = config["oc_assignment_radius"]
+    oc_td = config["oc_td"]
 
     with torch.no_grad():
         for i, data in enumerate(data_loader):
@@ -87,8 +73,8 @@ def _cluster_oc(config, model, data_loader, device):
                 cluster_ids_evt = oc_cluster_single_event(
                     coords_evt,
                     beta_evt,
-                    beta_thr= 0.1,   
-                    td = 0.3,  
+                    beta_thr= beta_thr,   
+                    td = oc_td,  
                 )
 
                 all_reco_ids.append(cluster_ids_evt.cpu().numpy())

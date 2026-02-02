@@ -22,57 +22,26 @@ def main():
         type=int, default=1000,
         help="Maximum number of events to process"
     )
-    ap.add_argument("--out", required=True, help="Output CSV path")
+    ap.add_argument("-o", "--out", required=True, help="Output CSV path")
     #task / model type
-    ap.add_argument(
-        "--task",
+    ap.add_argument("-task",
         type=str,
         choices=["contrastive", "oc"],
-        default="contrastive",
+        default="oc",
         help="Type of model / reconstruction to use"
-    )
-
-    #shared model hyperparameters
-    ap.add_argument(
-        "-clustering_algorithm", type=str,
-        default="agglomerative",
-        help="Clustering algorithm to use (contrastive task)"
     )
     ap.add_argument(
         "-distance_threshold", type=float, default=0.3,
         help="Distance threshold for clustering (contrastive task)"
     )
-    ap.add_argument(
-        "-metric", type=str, default="cosine",
-        help="Distance metric for clustering (contrastive task)"
-    )
-    ap.add_argument(
-        "-linkage", type=str, default="average",
-        help="Linkage method for clustering (contrastive task)"
-    )
-    ap.add_argument(
-        "-cluster_events", type=int, default=1000,
-        help="Maximum number of events to cluster (contrastive task)"
-    )
-
+   
     #OC-specific clustering
     ap.add_argument(
-        "--oc_beta_thr", type=float, default=0.1,
-        help="Minimum beta for extra OC centers"
+        "-oc_td", type=float, default=0.8,
+        help="td variable of OC Method"
     )
-    ap.add_argument(
-        "--oc_min_center_separation", type=float, default=0.5,
-        help="Minimum separation of OC centers in latent space"
-    )
-    ap.add_argument(
-        "--oc_use_distance_cut", action="store_true",
-        help="If set, only assign hits within a radius to OC centers"
-    )
-    ap.add_argument(
-        "--oc_assignment_radius", type=float, default=1.0,
-        help="Assignment radius in OC latent space (if use_distance_cut)"
-    )
-
+    ap.add_argument("-final_dim", type = int, default = 16)
+    ap.add_argument("-model_path", required = True)
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,19 +55,18 @@ def main():
         shuffle=False,
         follow_batch=["x"],
     )
-    print(len(loader))
 
     # Model config & load
     model_config = {
-        "task": "contrastive",
+        "task": args.task,
         "hidden_dim": 64,
         "num_layers": 3,
         "dropout": 0.01,
         "k": 24,
 
-        "contrastive_dim": 16,
-        "coord_dim": 3,
-        "path" : "/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_5_CD16_Newww/best_model.pt"
+        "contrastive_dim": args.final_dim,
+        "coord_dim": args.final_dim,
+        "path" : args.model_path
     }
 
     model = model_loader(
@@ -111,16 +79,13 @@ def main():
     cluster_config = {
         "task": args.task,
         # contrastive path:
-        "algorithm": args.clustering_algorithm,
         "distance_threshold": args.distance_threshold,
-        "metric": args.metric,
-        "linkage": args.linkage,
-        "max_events": args.cluster_events,
+        "metric": "euclidean",
+        "linkage": "ward",
+        "max_events": args.max_events,
         # OC path:
         "oc_beta_thr": args.oc_beta_thr,
-        "oc_min_center_separation": args.oc_min_center_separation,
-        "oc_use_distance_cut": args.oc_use_distance_cut,
-        "oc_assignment_radius": args.oc_assignment_radius,
+        "oc_td" : args.oc_td
     }
 
     reconstruction_labels = clusterer(

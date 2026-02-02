@@ -1,8 +1,0 @@
-### Loading ROOT file: /vols/cms/mm1221/geant4sim/simulations/build/Test_EM_2_10/raw/split_0883.root
-Loaded 100 events
-100
-Model loaded successfully (task=contrastive).
-[contrastive] Clustering completed in 477.70 s. Average time per event: 4.7770 s.
-Clustering / OC reconstruction completed successfully.
-DataFrame constructed successfully.
-Wrote dfs/split_0883.csv

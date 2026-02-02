@@ -11,7 +11,7 @@ class Net_OC(nn.Module):
         num_layers=4,
         dropout=0.3,
         k=20,
-        coord_dim=3,   # NEW: embedding/cluster coordinate dimension for OC
+        coord_dim=3,   
     ):
         """
         DynamicEdgeConv network adapted for Object Condensation.
@@ -28,7 +28,7 @@ class Net_OC(nn.Module):
         self.k = k
         self.coord_dim = coord_dim
 
-        # Input encoder (your code currently uses 5 input features)
+        # Input encoder 
         self.lc_encode = nn.Sequential(
             nn.Linear(5, hidden_dim),
             nn.ELU(),
@@ -54,7 +54,6 @@ class Net_OC(nn.Module):
             for _ in range(num_layers)
         ])
 
-        # Keep the old name `self.output`, but make it a trunk to 32 dims (same as before)
         self.output = nn.Sequential(
             nn.Linear(hidden_dim, 64),
             nn.ELU(),
@@ -64,36 +63,24 @@ class Net_OC(nn.Module):
             nn.Dropout(p=dropout),
         )
 
-        # NEW: two tiny heads for Object Condensation
-        self.beta_head = nn.Linear(32, 1)            # -> (N, 1)
-        self.coord_head = nn.Linear(32, coord_dim)   # -> (N, coord_dim)
+        self.beta_head = nn.Linear(32, 1)            
+        self.coord_head = nn.Linear(32, coord_dim)   
 
     def forward(self, x, batch=None):
-        """
-        Args:
-          x: (N, 5) node features
-          batch: (N,) batch vector (optional)
-
-        Returns:
-          beta: (N,)
-          cluster_coords: (N, coord_dim)
-          batch: (N,) (unchanged)
-        """
         # Encode input features to hidden_dim
-        x_enc = self.lc_encode(x)  # (N, hidden_dim)
+        x_enc = self.lc_encode(x)  
 
         # Pass through DynamicEdgeConv layers
         for conv in self.edgeconv_layers:
-            x_enc = conv(x_enc, batch)  # edges computed dynamically
+            x_enc = conv(x_enc, batch)  
             x_enc = F.elu(x_enc)
             x_enc = F.dropout(x_enc, p=self.dropout, training=self.training)
 
-        # Shared trunk (kept as `self.output` to minimize diffs)
-        h = self.output(x_enc)  # (N, 32)
+        h = self.output(x_enc)  
 
         # OC outputs
-        beta = torch.sigmoid(self.beta_head(h)).squeeze(-1)  # (N,)
-        cluster_coords = self.coord_head(h)                  # (N, coord_dim)
+        beta = torch.sigmoid(self.beta_head(h)).squeeze(-1)  
+        cluster_coords = self.coord_head(h)                  
 
         return beta, cluster_coords, batch
 
