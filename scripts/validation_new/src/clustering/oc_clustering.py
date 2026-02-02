@@ -11,7 +11,6 @@ def oc_cluster_single_event(
     assign_remaining_to_nearest: bool = True,
 ) -> torch.Tensor:
     """
-    Paper-style Object Condensation inference for ONE event.
 
     Steps:
       1) Candidate centers: hits with beta > beta_thr
@@ -19,15 +18,6 @@ def oc_cluster_single_event(
       3) Greedy non-max suppression: accept a candidate as a center if it's >= td away from all accepted centers
       4) Radius assignment (in descending-beta center order):
          assign all currently-unassigned hits within distance td to that center
-      5) Optional: assign any remaining hits to the nearest center (to avoid -1 in a no-noise dataset)
-
-    Args:
-        cluster_coords: (N, D) latent condensation coordinates
-        beta:           (N,)   condensation scores in (0,1)
-        beta_thr:       beta threshold for candidate centers
-        td:             distance threshold for center separation AND assignment radius 
-        assign_remaining_to_nearest: if True, assign leftover hits to nearest center
-
     Returns:
         cluster_ids: (N,) long tensor
             -1 for unassigned (only if assign_remaining_to_nearest=False or no centers found)
@@ -44,7 +34,7 @@ def oc_cluster_single_event(
     cand_mask = beta > beta_thr
     cand_idx = torch.nonzero(cand_mask, as_tuple=False).view(-1)
 
-    # No candidates => fall back to global max beta as single center
+    # No candidates -> fall back to global max beta as single center
     if cand_idx.numel() == 0:
         center_idx = torch.argmax(beta).view(1)
         centers = center_idx
@@ -72,14 +62,13 @@ def oc_cluster_single_event(
                 centers_x = torch.cat([centers_x, x], dim=0)
 
         centers = torch.stack(centers_list) if len(centers_list) else torch.argmax(beta).view(1)
-        centers_x = cluster_coords[centers]  # (K, D)
+        centers_x = cluster_coords[centers]  
 
     K = centers_x.shape[0]
     if K == 0:
         return cluster_ids  
 
     # 3) Radius assignment in descending-beta center order
-    # Ensure centers are processed in descending beta
     center_order = torch.argsort(beta[centers], descending=True)
     centers = centers[center_order]
     centers_x = centers_x[center_order]
@@ -101,6 +90,7 @@ def oc_cluster_single_event(
             unassigned = cluster_ids == -1
 
     # 4) Optional: assign leftovers to nearest center
+    # As our data has no noise this is set to True
     if assign_remaining_to_nearest and (cluster_ids == -1).any():
         idx_u = torch.nonzero(cluster_ids == -1, as_tuple=False).view(-1)
         d_all = torch.cdist(cluster_coords[idx_u], centers_x)  
