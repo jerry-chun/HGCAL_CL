@@ -1,0 +1,17 @@
+universe = vanilla
+executable = run.sh
+
+# args: <listfile> <chunk_id> <ncpus>
+arguments = Test_EM_2_10_delta5.txt $(Process) 8
+
+output = logs/job.$(Cluster).$(Process).out
+error  = logs/job.$(Cluster).$(Process).err
+log    = logs/job.$(Cluster).$(Process).log
+
+request_cpus = 8
++MaxRuntime  = 10000
+
+priority = 1000
+
+
+queue 25

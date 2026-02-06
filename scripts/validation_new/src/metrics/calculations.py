@@ -30,6 +30,31 @@ def calc_efficiency(df, threshold=0.5):
     efficiency = associated_cp / total_cp if total_cp > 0 else 0.0
     return efficiency
 
+def calc_merge_rate(df, threshold=0.2):
+    # Total number of reconstructed objects
+    total_reco = (
+        df[['event_id', 'reco_id']]
+        .drop_duplicates()
+        .shape[0]
+    )
+
+    if total_reco == 0:
+        return 0.0
+
+    # Count how many CPs each reco object is associated with
+    reco_cp_counts = (
+        df.loc[df['RtS'] < threshold, ['event_id', 'reco_id', 'cp_id']]
+        .drop_duplicates()
+        .groupby(['event_id', 'reco_id'])['cp_id']
+        .nunique()
+    )
+
+    # Reco objects associated with more than one CP
+    merged_reco = (reco_cp_counts > 1).sum()
+
+    merge_rate = merged_reco / total_reco
+    return merge_rate
+
 def calc_response(df):
     idx_best = df.groupby(['event_id', 'cp_id'])['shared_energy'].idxmax()
     best_matches = df.loc[idx_best].copy()

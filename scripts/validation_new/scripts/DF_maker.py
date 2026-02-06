@@ -80,11 +80,11 @@ def main():
         "task": args.task,
         # contrastive path:
         "distance_threshold": args.distance_threshold,
-        "metric": "euclidean",
-        "linkage": "ward",
+        "metric": "cosine",
+        "linkage": "average",
         "max_events": args.max_events,
         # OC path:
-        "oc_beta_thr": args.oc_beta_thr,
+        "oc_beta_thr": 0.1,
         "oc_td" : args.oc_td
     }
 
