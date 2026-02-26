@@ -30,12 +30,22 @@ def main():
         default="oc",
         help="Type of model / reconstruction to use"
     )
+    ap.add_argument("-task",
+        type=str,
+        choices=["agglomerative", "density"],
+        default="agglomerative",
+        help="Type of clustering to use"
+    )
     ap.add_argument(
         "-distance_threshold", type=float, default=0.3,
         help="Distance threshold for clustering (contrastive task)"
     )
    
     #OC-specific clustering
+    ap.add_argument(
+        "-beta_thr", type=float, default=0.1,
+        help="td variable of OC Method"
+    )
     ap.add_argument(
         "-oc_td", type=float, default=0.8,
         help="td variable of OC Method"
@@ -61,7 +71,7 @@ def main():
         "task": args.task,
         "hidden_dim": 64,
         "num_layers": 3,
-        "dropout": 0.01,
+        "dropout": 0.1,
         "k": 24,
 
         "contrastive_dim": args.final_dim,
@@ -75,16 +85,18 @@ def main():
     )
     print(f"Model loaded successfully (task={args.task}).")
 
-    # Clustering / OC config
+    # Clustering Config
     cluster_config = {
         "task": args.task,
+        "cluster": args.cluster
+
         # contrastive path:
         "distance_threshold": args.distance_threshold,
-        "metric": "cosine",
-        "linkage": "average",
+        "metric": "euclidean",
+        "linkage": "ward",
         "max_events": args.max_events,
         # OC path:
-        "oc_beta_thr": 0.1,
+        "oc_beta_thr": args.beta_thr,
         "oc_td" : args.oc_td
     }
 

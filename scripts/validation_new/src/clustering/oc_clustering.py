@@ -34,7 +34,6 @@ def oc_cluster_single_event(
     cand_mask = beta > beta_thr
     cand_idx = torch.nonzero(cand_mask, as_tuple=False).view(-1)
 
-    # No candidates -> fall back to global max beta as single center
     if cand_idx.numel() == 0:
         center_idx = torch.argmax(beta).view(1)
         centers = center_idx
@@ -79,7 +78,6 @@ def oc_cluster_single_event(
         if not unassigned.any():
             break
 
-        # distances from currently-unassigned hits to center k
         idx_u = torch.nonzero(unassigned, as_tuple=False).view(-1)
         d = torch.norm(cluster_coords[idx_u] - centers_x[k], dim=-1)  
         in_ball = d <= td
@@ -89,7 +87,6 @@ def oc_cluster_single_event(
             cluster_ids[assigned_idx] = k
             unassigned = cluster_ids == -1
 
-    # 4) Optional: assign leftovers to nearest center
     # As our data has no noise this is set to True
     if assign_remaining_to_nearest and (cluster_ids == -1).any():
         idx_u = torch.nonzero(cluster_ids == -1, as_tuple=False).view(-1)
