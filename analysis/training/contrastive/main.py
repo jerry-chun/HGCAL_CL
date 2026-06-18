@@ -22,8 +22,10 @@ warnings.filterwarnings(
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Train_Pion_2_7/"
-vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Val_Pion_2_7/"
+
+ipath = "/path/to/input/data/"
+vpath = "/path/to/validation/data/"
+
 
 data_train = CCV1(root=ipath, inp="train", max_events=200000)
 data_val   = CCV1(root=vpath, inp="val", max_events=100000)
@@ -58,7 +60,7 @@ val_loader = DataLoader(
 )
 
 # New output directory name to reflect hits & cubesim
-output_dir = '/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/Pion_2_10_CD16_Supcon_delta5_t01'
+output_dir = '/path/to/output/'
 
 
 

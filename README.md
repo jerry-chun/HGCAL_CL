@@ -1,5 +1,5 @@
 ## HGCAL_CL
 
-- simulations: Code for producing data 
+- simulation: Code for producing data 
     - Unsure if this works fully
-- scripts: Code for the trianing and validatoion of the models
+- analysis: Code for the training and validation of the models

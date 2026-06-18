@@ -14,8 +14,8 @@ from src.train import train_oc, test_oc
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Loading data...")
 
-ipath = "/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Train_Pion_2_7/"
-vpath = "/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Val_Pion_2_7/"
+ipath = "/path/to/input/data/"
+vpath = "/path/to/validation/data/"
 
 data_train = CCV1(root=ipath, inp="train", max_events=200000)
 data_val   = CCV1(root=vpath,   inp="val", max_events=100000)
@@ -47,7 +47,7 @@ model = Net(
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
 
-output_dir = "/vols/cms/mm1221/geant4sim/scripts/training/ObjectCondensation/runs/Pion_2_10_CD16_delta5_1/"
+output_dir = '/path/to/output/'
 os.makedirs(output_dir, exist_ok=True)
 
 best_val_loss = float("inf")
