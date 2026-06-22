@@ -8,6 +8,9 @@ simulations/build
 *.txt
 *.out
 *.err
+*.root
+dfs/
+runs/
 scripts/validation_new/notebooks/
 
 

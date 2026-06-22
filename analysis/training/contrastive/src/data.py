@@ -43,55 +43,38 @@ class CCV1(Dataset):
         self.max_events = max_events
         self.fill_data(max_events)
 
-    def fill_data(self,max_events):
-        counter = 0
-        arrLens0 = []
-        arrLens1 = []
+    def fill_data(self, max_events):
+        chunks_x, chunks_y, chunks_z = [], [], []
+        chunks_e, chunks_l, chunks_id, chunks_p = [], [], [], []
+        total = 0
 
         print("### Loading data")
-        for fi,path in enumerate(tqdm(self.raw_paths)):
-            
-            for array in uproot.iterate(f"{path}:HGCALTBout", ["hit_x", "hit_y", "hit_z", "hit_Edep", "hit_layer", 
-                                                               "hit_showerid", "hit_purity"], step_size=self.step_size):
-            
-                tmp_stsCP_vertices_x = array['hit_x']
-                tmp_stsCP_vertices_y = array['hit_y']
-                tmp_stsCP_vertices_z = array['hit_z']
-                tmp_stsCP_vertices_energy = array['hit_Edep']
-                tmp_stsCP_vertices_indexes = array['hit_showerid']
-                tmp_stsCP_vertices_purity = array['hit_purity']
-                tmp_stsCP_vertices_layer_id = array['hit_layer']
-
-                
-                # weighted energies (A LC appears in its caloparticle assignment array as the energy it contributes not full energy)
-                #tmp_stsCP_vertices_energy = tmp_stsCP_vertices_energy * tmp_stsCP_vertices_multiplicity
-                
-                self.step_size = min(self.step_size,len(tmp_stsCP_vertices_x))
-
-                if counter == 0:
-                    self.stsCP_vertices_x = tmp_stsCP_vertices_x
-                    self.stsCP_vertices_y = tmp_stsCP_vertices_y
-                    self.stsCP_vertices_z = tmp_stsCP_vertices_z
-                    self.stsCP_vertices_energy = tmp_stsCP_vertices_energy
-                    self.stsCP_vertices_layer_id = tmp_stsCP_vertices_layer_id
-                    self.stsCP_vertices_indexes = tmp_stsCP_vertices_indexes
-                    self.stsCP_stsCP_vertices_purity = tmp_stsCP_vertices_purity
-                else:
-                    self.stsCP_vertices_x = ak.concatenate((self.stsCP_vertices_x,tmp_stsCP_vertices_x))
-                    self.stsCP_vertices_y = ak.concatenate((self.stsCP_vertices_y,tmp_stsCP_vertices_y))
-                    self.stsCP_vertices_z = ak.concatenate((self.stsCP_vertices_z,tmp_stsCP_vertices_z))
-                    self.stsCP_vertices_energy = ak.concatenate((self.stsCP_vertices_energy,tmp_stsCP_vertices_energy))
-                    self.stsCP_vertices_layer_id = ak.concatenate((self.stsCP_vertices_layer_id,tmp_stsCP_vertices_layer_id))
-                    self.stsCP_vertices_indexes = ak.concatenate((self.stsCP_vertices_indexes,tmp_stsCP_vertices_indexes))
-                    self.stsCP_stsCP_vertices_purity = ak.concatenate((self.stsCP_stsCP_vertices_purity, tmp_stsCP_vertices_purity))
-
-                #print(len(self.stsCP_vertices_x))
-                counter += 1
-                if len(self.stsCP_vertices_x) > max_events:
+        for fi, path in enumerate(tqdm(self.raw_paths)):
+            for array in uproot.iterate(f"{path}:HGCALTBout",
+                                        ["hit_x", "hit_y", "hit_z", "hit_Edep",
+                                         "hit_layer", "hit_showerid", "hit_purity"],
+                                        step_size=self.step_size):
+                chunks_x.append(array['hit_x'])
+                chunks_y.append(array['hit_y'])
+                chunks_z.append(array['hit_z'])
+                chunks_e.append(array['hit_Edep'])
+                chunks_l.append(array['hit_layer'])
+                chunks_id.append(array['hit_showerid'])
+                chunks_p.append(array['hit_purity'])
+                total += len(array['hit_x'])
+                if total >= max_events:
                     print(f"Reached {max_events}!")
                     break
-            if len(self.stsCP_vertices_x) > max_events:
+            if total >= max_events:
                 break
+
+        self.stsCP_vertices_x              = ak.concatenate(chunks_x)
+        self.stsCP_vertices_y              = ak.concatenate(chunks_y)
+        self.stsCP_vertices_z              = ak.concatenate(chunks_z)
+        self.stsCP_vertices_energy         = ak.concatenate(chunks_e)
+        self.stsCP_vertices_layer_id       = ak.concatenate(chunks_l)
+        self.stsCP_vertices_indexes        = ak.concatenate(chunks_id)
+        self.stsCP_stsCP_vertices_purity   = ak.concatenate(chunks_p)
      
             
             

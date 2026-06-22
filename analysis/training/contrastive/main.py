@@ -23,12 +23,12 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Loading data...")
 
 
-ipath = "/path/to/input/data/"
-vpath = "/path/to/validation/data/"
+ipath = "/oscar/data/lgouskos/jjchun/hgcal_cl/raw/train/"
+vpath = "/oscar/data/lgouskos/jjchun/hgcal_cl/raw/val/"
 
 
-data_train = CCV1(root=ipath, inp="train", max_events=200000)
-data_val   = CCV1(root=vpath, inp="val", max_events=100000)
+data_train = CCV1(root=ipath, inp="train", max_events=50000)
+data_val   = CCV1(root=vpath, inp="val",   max_events=10000)
 
 
 model = Net(
@@ -40,7 +40,7 @@ model = Net(
 ).to(device)
 print("Model Loaded")
 
-BS = 16
+BS = 4
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
@@ -60,7 +60,7 @@ val_loader = DataLoader(
 )
 
 # New output directory name to reflect hits & cubesim
-output_dir = '/path/to/output/'
+output_dir = '/users/jjchun/scratch/hgcal_cl/runs/run01/'
 
 
 

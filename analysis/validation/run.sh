@@ -1,11 +1,12 @@
 #!/bin/bash
 #set -euo pipefail
 
-source /cvmfs/sft.cern.ch/lcg/views/LCG_105a_cuda/x86_64-el9-gcc11-opt/setup.sh
+module load anaconda3/2023.09-0-aqbc
+conda activate hgcal
 
-INPUT_DIR="/vols/cms/mm1221/geant4sim/simulations/build/Datasets/Test_EM_2_10_delta5"
-CODE_DIR="/vols/cms/mm1221/geant4sim/scripts/validation_new"
-MODEL_PATH="/vols/cms/mm1221/geant4sim/scripts/training/Contrastive/runs/EM_2_10_CD16_Supcon_delta5_t01/best_model.pt"
+INPUT_DIR="/oscar/data/lgouskos/jjchun/hgcal_cl/raw/test"
+CODE_DIR="/oscar/data/lgouskos/jjchun/hgcal_cl/repo/HGCAL_CL/analysis/validation"
+MODEL_PATH="/users/jjchun/scratch/hgcal_cl/runs/run01/best_model.pt"
 
 LISTFILE="$1"          # e.g. EM_2_10_delta_5.txt
 CHUNK_ID="$2"          # $(Process)

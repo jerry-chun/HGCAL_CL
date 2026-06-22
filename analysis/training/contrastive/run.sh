@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# ==============================
-# Configuration
-# ==============================
-
-
-source /home/hep/mm1221/miniforge3/etc/profile.d/conda.sh
-conda activate torch25cuda124
-# Call the HyperParam.py script with the passed hyperparameters
+source /oscar/rt/9.6/25/spack/x86_64_v3/anaconda3-2023.09-0-aqbcryind6ewgctu7wijluakv5mo3lo5/etc/profile.d/conda.sh
+conda activate hgcal
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 python main.py
-

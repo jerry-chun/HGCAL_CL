@@ -30,7 +30,7 @@ def main():
         default="oc",
         help="Type of model / reconstruction to use"
     )
-    ap.add_argument("-task",
+    ap.add_argument("-cluster",
         type=str,
         choices=["agglomerative", "density"],
         default="agglomerative",
@@ -88,7 +88,7 @@ def main():
     # Clustering Config
     cluster_config = {
         "task": args.task,
-        "cluster": args.cluster
+        "cluster": args.cluster,
 
         # contrastive path:
         "distance_threshold": args.distance_threshold,
