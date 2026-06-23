@@ -40,7 +40,7 @@ model = Net(
 ).to(device)
 print("Model Loaded")
 
-BS = 4
+BS = 2
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
@@ -69,9 +69,33 @@ os.makedirs(output_dir, exist_ok=True)
 best_val_loss = float('inf')
 patience = 300
 no_improvement_epochs = 0
+start_epoch = 0
 
 csv_path = os.path.join(output_dir, 'training_loss.csv')
-if not os.path.exists(csv_path):
+
+# Resume from latest checkpoint if one exists
+existing = [
+    f for f in os.listdir(output_dir)
+    if f.startswith('epoch-') and f.endswith('.pt')
+]
+if existing:
+    latest_epoch = max(int(f[len('epoch-'):-len('.pt')]) for f in existing)
+    ckpt_path = os.path.join(output_dir, f'epoch-{latest_epoch}.pt')
+    ckpt = torch.load(ckpt_path, map_location=device)
+    model.load_state_dict(ckpt['model'])
+    optimizer.load_state_dict(ckpt['opt'])
+    scheduler.load_state_dict(ckpt['lr'])
+    start_epoch = latest_epoch
+    # Recover best_val_loss and no_improvement_epochs from saved CSV
+    if os.path.exists(csv_path):
+        with open(csv_path, 'r') as f:
+            rows = list(csv.DictReader(f))
+        if rows:
+            best_val_loss = min(float(r['val_loss']) for r in rows)
+            best_epoch = min(rows, key=lambda r: float(r['val_loss']))
+            no_improvement_epochs = latest_epoch - int(best_epoch['epoch'])
+    print(f"Resumed from epoch {start_epoch}, best_val_loss={best_val_loss:.8f}")
+else:
     with open(csv_path, 'w', newline='') as f:
         w = csv.writer(f)
         w.writerow(['epoch', 'train_loss', 'val_loss'])
@@ -79,7 +103,7 @@ if not os.path.exists(csv_path):
 epochs = 100
 print("starting:")
 
-for epoch in range(epochs):
+for epoch in range(start_epoch, epochs):
 
 
     print(f"Epoch {epoch+1}/{epochs}")

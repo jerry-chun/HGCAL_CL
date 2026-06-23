@@ -4,8 +4,8 @@
 module load anaconda3/2023.09-0-aqbc
 conda activate hgcal
 
-INPUT_DIR="/oscar/data/lgouskos/jjchun/hgcal_cl/raw/test"
-CODE_DIR="/oscar/data/lgouskos/jjchun/hgcal_cl/repo/HGCAL_CL/analysis/validation"
+INPUT_DIR="/oscar/home/jjchun/lgouskos_data/jjchun/hgcal_cl/raw/val/raw"
+CODE_DIR="/oscar/home/jjchun/lgouskos_data/jjchun/hgcal_cl/repo/HGCAL_CL/analysis/validation"
 MODEL_PATH="/users/jjchun/scratch/hgcal_cl/runs/run01/best_model.pt"
 
 LISTFILE="$1"          # e.g. EM_2_10_delta_5.txt

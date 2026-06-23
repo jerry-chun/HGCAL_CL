@@ -27,7 +27,9 @@ def _cluster_agglomerative(config, model, data_loader, device):
         out = model(data.x, data.x_batch)
         
         preds = out[0] if task == "contrastive" else out[1]
-        preds = F.normalize(preds, p=2, dim=1)
+        # raw embeddings for agglomerative — paper uses delta_agg=9.5 on unnormalized space
+        if task != "contrastive":
+            preds = F.normalize(preds, p=2, dim=1)
 
         agglomerative = AgglomerativeClustering(
             n_clusters=None,
@@ -80,10 +82,10 @@ def _cluster_density(config, model, data_loader, device):
                 out = model(data.x, data.x_batch)
                 preds = F.normalize(out[0], p=2, dim=1)
                 
-                beta, cluster_labels = Density_Clustering(
+                cluster_labels = Density_Clustering(
                     preds,
-                    beta_thr=beta_thr,    
-                    td=oc_td,         
+                    beta_thr=beta_thr,
+                    td=oc_td,
                 )
 
 
