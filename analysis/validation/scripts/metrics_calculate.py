@@ -17,7 +17,7 @@ def main():
     purity = calc_purity(df, threshold = 0.2)
     print(f"Purity: {purity:.4f}")
 
-    efficiency = calc_efficiency(df, threshold = 0.5)
+    efficiency = calc_efficiency(df, threshold = 0.7)
     print(f"Efficiency: {efficiency:.4f}")
 
     response, resolution = calc_response(df)

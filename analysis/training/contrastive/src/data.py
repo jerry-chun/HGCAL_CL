@@ -43,7 +43,7 @@ class CCV1(Dataset):
         self.max_events = max_events
         self.fill_data(max_events)
 
-    def fill_data(self, max_events):
+    def fill_data(self, max_events, max_hits_per_event=5000):
         chunks_x, chunks_y, chunks_z = [], [], []
         chunks_e, chunks_l, chunks_id, chunks_p = [], [], [], []
         total = 0
@@ -68,13 +68,28 @@ class CCV1(Dataset):
             if total >= max_events:
                 break
 
-        self.stsCP_vertices_x              = ak.concatenate(chunks_x)
-        self.stsCP_vertices_y              = ak.concatenate(chunks_y)
-        self.stsCP_vertices_z              = ak.concatenate(chunks_z)
-        self.stsCP_vertices_energy         = ak.concatenate(chunks_e)
-        self.stsCP_vertices_layer_id       = ak.concatenate(chunks_l)
-        self.stsCP_vertices_indexes        = ak.concatenate(chunks_id)
-        self.stsCP_stsCP_vertices_purity   = ak.concatenate(chunks_p)
+        all_x = ak.concatenate(chunks_x)
+        # Filter out events with too many hits to prevent GPU OOM in SupCon loss
+        hit_counts = ak.num(all_x)
+        valid = hit_counts <= max_hits_per_event
+        n_filtered = int(ak.sum(~valid))
+        if n_filtered > 0:
+            print(f"Filtered {n_filtered} events with >{max_hits_per_event} hits")
+
+        all_y   = ak.concatenate(chunks_y)
+        all_z   = ak.concatenate(chunks_z)
+        all_e   = ak.concatenate(chunks_e)
+        all_l   = ak.concatenate(chunks_l)
+        all_id  = ak.concatenate(chunks_id)
+        all_p   = ak.concatenate(chunks_p)
+
+        self.stsCP_vertices_x              = all_x[valid]
+        self.stsCP_vertices_y              = all_y[valid]
+        self.stsCP_vertices_z              = all_z[valid]
+        self.stsCP_vertices_energy         = all_e[valid]
+        self.stsCP_vertices_layer_id       = all_l[valid]
+        self.stsCP_vertices_indexes        = all_id[valid]
+        self.stsCP_stsCP_vertices_purity   = all_p[valid]
      
             
             
